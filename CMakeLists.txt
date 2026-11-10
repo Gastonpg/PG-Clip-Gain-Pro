@@ -15,6 +15,7 @@ add_library(pgclip_core STATIC
     src/core/queued_capture_assembler.cpp
     src/core/window_activity.cpp
     src/core/clip_gain_foundation.cpp
+    src/core/gain_curve_processor.cpp
 )
 target_include_directories(pgclip_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -70,6 +71,10 @@ if(PGCLIP_BUILD_TESTS)
     add_executable(pgclip_clip_gain_tests tests/core/test_clip_gain_foundation.cpp)
     target_link_libraries(pgclip_clip_gain_tests PRIVATE pgclip_core)
     add_test(NAME pgclip_clip_gain_tests COMMAND pgclip_clip_gain_tests)
+
+    add_executable(pgclip_gain_curve_tests tests/core/test_gain_curve_processor.cpp)
+    target_link_libraries(pgclip_gain_curve_tests PRIVATE pgclip_core)
+    add_test(NAME pgclip_gain_curve_tests COMMAND pgclip_gain_curve_tests)
 endif()
 
 if(PGCLIP_BUILD_VST3)
