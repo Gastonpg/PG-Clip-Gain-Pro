@@ -13,6 +13,7 @@ struct LinearGainPoint {
 };
 
 struct GainCurveRuntimeResult;
+struct GainCurveRuntimeConfig;
 
 class GainCurveRuntime {
 public:
@@ -20,7 +21,8 @@ public:
 
 private:
     friend struct GainCurveRuntimeResult;
-    friend GainCurveRuntimeResult prepareGainCurveRuntime(const GainCurve&);
+    friend GainCurveRuntimeResult prepareGainCurveRuntime(
+        const GainCurve&, const GainCurveRuntimeConfig&);
     std::vector<LinearGainPoint> points_;
 };
 
