@@ -143,16 +143,38 @@ SnapshotBuildResult buildSharedAnalysisSnapshot(
             const bool invalidNumbers =
                 !std::isfinite(channel.rms) ||
                 !std::isfinite(channel.peak) ||
-                channel.rms < 0.0 || channel.peak < 0.0;
+                !std::isfinite(channel.meanAbsolute) ||
+                !std::isfinite(channel.dcOffset) ||
+                !std::isfinite(channel.zeroCrossingRate) ||
+                !std::isfinite(channel.crestFactor) ||
+                channel.rms < 0.0 || channel.peak < 0.0 ||
+                channel.meanAbsolute < 0.0 ||
+                channel.zeroCrossingRate < 0.0 ||
+                channel.zeroCrossingRate > 1.0 ||
+                channel.crestFactor < 0.0;
+
+            const double metricTolerance =
+                1.0e-12 * std::max(1.0, channel.peak);
             const bool inconsistentFiniteMetrics =
                 channel.finite &&
-                (channel.rms > channel.peak +
-                    1.0e-12 * std::max(1.0, channel.peak) ||
+                (channel.rms > channel.peak + metricTolerance ||
+                 channel.meanAbsolute > channel.peak + metricTolerance ||
+                 std::abs(channel.dcOffset) >
+                     channel.meanAbsolute + metricTolerance ||
+                 (channel.rms == 0.0 && channel.peak != 0.0) ||
+                 (channel.rms > 0.0 &&
+                  std::abs(channel.crestFactor -
+                           channel.peak / channel.rms) >
+                      1.0e-12 * std::max(1.0, channel.crestFactor)) ||
+                 (channel.rms == 0.0 && channel.crestFactor != 0.0) ||
                  channel.silent != (channel.peak == 0.0));
+
             const bool inconsistentInvalidMetrics =
                 !channel.finite &&
                 (channel.rms != 0.0 || channel.peak != 0.0 ||
-                 channel.silent);
+                 channel.meanAbsolute != 0.0 || channel.dcOffset != 0.0 ||
+                 channel.zeroCrossingRate != 0.0 ||
+                 channel.crestFactor != 0.0 || channel.silent);
 
             if (invalidNumbers || inconsistentFiniteMetrics ||
                 inconsistentInvalidMetrics) {
