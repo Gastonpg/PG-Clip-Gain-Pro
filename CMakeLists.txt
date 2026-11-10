@@ -14,6 +14,7 @@ add_library(pgclip_core STATIC
     src/core/spsc_audio_block_queue.cpp
     src/core/queued_capture_assembler.cpp
     src/core/capture_session_control.cpp
+    src/core/planar_audio_queue_writer.cpp
     src/core/window_activity.cpp
     src/core/clip_gain_foundation.cpp
     src/core/gain_curve_processor.cpp
@@ -69,6 +70,10 @@ if(PGCLIP_BUILD_TESTS)
     add_executable(pgclip_capture_session_tests tests/core/test_capture_session_control.cpp)
     target_link_libraries(pgclip_capture_session_tests PRIVATE pgclip_core)
     add_test(NAME pgclip_capture_session_tests COMMAND pgclip_capture_session_tests)
+
+    add_executable(pgclip_planar_queue_writer_tests tests/core/test_planar_audio_queue_writer.cpp)
+    target_link_libraries(pgclip_planar_queue_writer_tests PRIVATE pgclip_core)
+    add_test(NAME pgclip_planar_queue_writer_tests COMMAND pgclip_planar_queue_writer_tests)
 
     add_executable(pgclip_activity_tests tests/core/test_window_activity.cpp)
     target_link_libraries(pgclip_activity_tests PRIVATE pgclip_core)
