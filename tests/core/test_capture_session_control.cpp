@@ -39,8 +39,14 @@ int main() {
 
     check(session.requestArm(), "captured session can be armed again");
     check(session.completeArm(false), "worker reports failed preparation");
+    check(session.state() == CaptureSessionState::Draining,
+          "failed preparation enters cleanup before rejection");
+    check(!session.requestArm(),
+          "cannot retry while failed preparation is being cleaned");
+    check(session.completeDrain(false),
+          "worker confirms failed-preparation cleanup");
     check(session.state() == CaptureSessionState::Rejected,
-          "failed preparation rejects session");
+          "failed preparation becomes terminal after cleanup");
 
     check(session.requestArm(), "rejected preparation can be retried");
     check(session.completeArm(true), "prepare second session");
