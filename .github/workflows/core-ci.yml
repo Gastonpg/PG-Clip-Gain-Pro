@@ -37,7 +37,7 @@ jobs:
         run: ctest --test-dir build -C Release --output-on-failure
 
       - name: Stage VST3 bundle
-        run: cmake -E copy_directory build/Release/PGClipGainPro.vst3 artifact/PGClipGainPro.vst3
+        run: cmake -E copy_directory build/VST3/Release/PGClipGainPro.vst3 artifact/PGClipGainPro.vst3
 
       - name: Upload VST3 bundle
         uses: actions/upload-artifact@v4
