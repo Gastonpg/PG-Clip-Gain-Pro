@@ -73,7 +73,7 @@ ValidationIssue validate(const AnalysisConfig& config) {
     }
 
     if (config.version == 0U) {
-        return {ValidationCode::InvalidWindow,
+        return {ValidationCode::InvalidVersion,
                 "Analysis configuration version must be non-zero."};
     }
 
