@@ -28,12 +28,8 @@ inline std::optional<PcmBuffer> makeSilence(AudioFormat format,
     }
 
     PcmBuffer result{format, frameCount, {}};
-    try {
-        result.interleaved.assign(
-            static_cast<std::size_t>(frameCount) * channels, 0.0F);
-    } catch (...) {
-        return std::nullopt;
-    }
+    result.interleaved.assign(
+        static_cast<std::size_t>(frameCount) * channels, 0.0F);
     return result;
 }
 
