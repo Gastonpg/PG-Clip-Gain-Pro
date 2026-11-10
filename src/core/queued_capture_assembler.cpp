@@ -25,15 +25,22 @@ QueuedCaptureAssembler::QueuedCaptureAssembler(
 }
 
 bool QueuedCaptureAssembler::begin(
+    SpscAudioBlockQueue& queue,
     FrameIndex sourceStartFrame,
     FrameIndex expectedFrameCount) noexcept {
     expectedFrameCount_ = expectedFrameCount;
+    droppedBlocksAtBegin_ = queue.droppedBlocks();
     return accumulator_.begin(sourceStartFrame, expectedFrameCount);
 }
 
 QueueDrainStatus QueuedCaptureAssembler::drainOne(
     SpscAudioBlockQueue& queue) noexcept {
     if (accumulator_.descriptor().state != CaptureState::Capturing) {
+        return QueueDrainStatus::CaptureRejected;
+    }
+
+    if (queue.droppedBlocks() != droppedBlocksAtBegin_) {
+        accumulator_.markDiscontinuous();
         return QueueDrainStatus::CaptureRejected;
     }
 
@@ -71,8 +78,19 @@ QueueDrainStatus QueuedCaptureAssembler::drainOne(
     return QueueDrainStatus::BlockAccepted;
 }
 
-void QueuedCaptureAssembler::finish() noexcept {
+void QueuedCaptureAssembler::finish(SpscAudioBlockQueue& queue) noexcept {
+    if (queue.droppedBlocks() != droppedBlocksAtBegin_) {
+        accumulator_.markDiscontinuous();
+    }
     accumulator_.finish();
+}
+
+void QueuedCaptureAssembler::finishAtCapturedLength(
+    SpscAudioBlockQueue& queue) noexcept {
+    if (queue.droppedBlocks() != droppedBlocksAtBegin_) {
+        accumulator_.markDiscontinuous();
+    }
+    accumulator_.finishAtCapturedLength();
 }
 
 void QueuedCaptureAssembler::cancel() noexcept {
