@@ -225,8 +225,22 @@ CurveCombinationResult combineStaticGainCurves(
     std::sort(frames.begin(), frames.end());
     frames.erase(std::unique(frames.begin(), frames.end()), frames.end());
 
-    result.curve.points.reserve(frames.size());
-    for (const FrameIndex frame : frames) {
+    std::vector<FrameIndex> sampledFrames;
+    sampledFrames.reserve(frames.size() * 2U);
+    for (std::size_t index = 0U; index < frames.size(); ++index) {
+        sampledFrames.push_back(frames[index]);
+        if (index + 1U < frames.size()) {
+            const FrameIndex span = frames[index + 1U] - frames[index];
+            const FrameIndex midpoint = frames[index] + span / 2U;
+            if (midpoint > frames[index] &&
+                midpoint < frames[index + 1U]) {
+                sampledFrames.push_back(midpoint);
+            }
+        }
+    }
+
+    result.curve.points.reserve(sampledFrames.size());
+    for (const FrameIndex frame : sampledFrames) {
         const double clipGain = evaluateCurveLinear(clipGainCurve, frame);
         const double clipPeak = evaluateCurveLinear(clipPeakCurve, frame);
         const double combinedLinear = clipGain * clipPeak;
