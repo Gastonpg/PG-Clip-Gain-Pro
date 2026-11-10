@@ -97,7 +97,8 @@ int main() {
     check(partialAssembler.drainOne(partialQueue) ==
               QueueDrainStatus::BlockAccepted,
           "drain incomplete capture prefix");
-    partialAssembler.finish(partialQueue);
+    check(partialAssembler.finish(partialQueue),
+          "finalize only after worker has drained all queued blocks");
     check(partialAssembler.descriptor().state == CaptureState::Partial,
           "finish incomplete region as partial, never complete");
 
@@ -148,7 +149,13 @@ int main() {
     check(userDefinedAssembler.drainOne(userDefinedQueue) ==
               QueueDrainStatus::BlockAccepted,
           "drain user-defined region content");
-    userDefinedAssembler.finishAtCapturedLength(userDefinedQueue);
+    check(!userDefinedAssembler.finishAtCapturedLength(userDefinedQueue),
+          "refuse to finalize while queued audio remains");
+    check(userDefinedAssembler.drainOne(userDefinedQueue) ==
+              QueueDrainStatus::BlockAccepted,
+          "drain pending audio before capture finalization");
+    check(userDefinedAssembler.finishAtCapturedLength(userDefinedQueue),
+          "finalize user-defined region after queue drains");
     check(userDefinedAssembler.descriptor().state == CaptureState::Complete &&
               userDefinedAssembler.descriptor().totalFrames == 2U,
           "accept explicit user stop as the exact captured region boundary");
