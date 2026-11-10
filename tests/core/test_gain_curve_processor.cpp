@@ -76,8 +76,9 @@ int main() {
         clipGainCurve, clipPeakCurve, 10U,
         CurveCombinationConfig{6.0, 6.0});
     check(neutralCombined.status == CurveCombinationStatus::Ready &&
-              neutralCombined.curve.points.size() == 3U &&
-              std::abs(neutralCombined.curve.points[1U].gainDb) < 1.0e-6,
+              neutralCombined.curve.points.size() == 5U &&
+              neutralCombined.curve.points[2U].frame == 5U &&
+              std::abs(neutralCombined.curve.points[2U].gainDb) < 1.0e-6,
           "combine opposite Clip Gain and Clip Peak corrections in linear gain");
 
     const GainCurve extraCut{{
@@ -87,7 +88,7 @@ int main() {
         extraCut, clipPeakCurve, 10U,
         CurveCombinationConfig{6.0, 6.0});
     check(cappedCombined.status == CurveCombinationStatus::Ready &&
-              std::abs(cappedCombined.curve.points[1U].gainDb + 6.0) < 1.0e-6,
+              std::abs(cappedCombined.curve.points[2U].gainDb + 6.0) < 1.0e-6,
           "cap the combined attenuation to the shared safety limit");
 
     const GainCurve outsideCurve{{
