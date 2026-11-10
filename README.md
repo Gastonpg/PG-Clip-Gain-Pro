@@ -2,7 +2,7 @@
 
 Plugin VST3 de edición vocal inteligente mediante curvas estáticas de Clip Gain. El objetivo es mejorar la consistencia de nivel sin borrar la interpretación ni recurrir a compresión, limitación o saturación.
 
-> Estado actual: base C++17 iniciada y compilada localmente; los contratos y las pruebas unitarias iniciales pasan. Todavía no hay captura VST3, motores DSP completos ni binario validado.
+> Estado actual: núcleo C++17 independiente del host, compilado localmente en Release y Debug con sanitizadores; 6/6 suites pasan en ambos modos. Incluye captura acotada, descriptores iniciales, snapshot compartido y estadísticas contextuales. Todavía no hay integración VST3, segmentación vocal, motores Clip Gain/Clip Peak completos ni binario validado.
 
 ## Filosofía del producto
 
@@ -31,7 +31,6 @@ Plugin VST3 de edición vocal inteligente mediante curvas estáticas de Clip Gai
 14. [Flujo compartido de análisis en dos pasadas](docs/12_TWO_PASS_SHARED_ANALYSIS_PIPELINE.md)
 15. [Informe de revisión cruzada de la base](docs/13_CROSS_DOCUMENT_REVIEW_REPORT.md)
 16. [Base de implementación y contratos iniciales](docs/14_IMPLEMENTATION_FOUNDATION.md)
-16. [Base de implementación y contratos iniciales](docs/14_IMPLEMENTATION_FOUNDATION.md)
 
 ## Motores
 
@@ -43,6 +42,6 @@ Detecta anomalías locales respecto del contexto y propone atenuaciones puntuale
 
 ## Estado y próximos pasos
 
-La documentación define la arquitectura y el protocolo para resolver parámetros mediante pruebas. La siguiente fase es validar el esqueleto C++17 con compilación automatizada y ampliar el banco de pruebas; después se implementarán captura y análisis compartido en dos pasadas, sin interfaz gráfica.
+La documentación define la arquitectura y el protocolo para resolver parámetros mediante pruebas. La base host-independiente ya tiene pruebas locales; la siguiente fase es integrar captura con el ciclo de vida VST3 y completar descriptores/continuidad antes de implementar la segmentación contextual y los motores. La interfaz gráfica sigue postergada hasta validar el comportamiento DSP.
 
 Los cinco jueces de PG Audio Intelligence son una fase posterior y separada; no se integrarán sin autorización explícita del usuario.
