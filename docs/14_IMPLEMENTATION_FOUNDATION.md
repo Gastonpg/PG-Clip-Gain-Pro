@@ -1,98 +1,72 @@
-# PG Clip Gain Pro — Base de implementación v0.2
+# PG Clip Gain Pro — Base de implementación v0.3
 
-**Estado:** núcleo C++17 compilado localmente con CMake/GCC en Release y Debug con AddressSanitizer/UndefinedBehaviorSanitizer; 6/6 suites aprobadas en ambos modos.
-**Alcance:** base DSP independiente del host. Incluye contratos, fixtures sintéticos, acumulador de captura acotado, descriptores iniciales por ventana, snapshot compartido y estadísticas contextuales. Todavía no es un plugin VST3 ni implementa la segmentación vocal o los motores completos.
+**Estado:** núcleo DSP C++17 y primer módulo VST3 real integrados en el proyecto. Las seis suites del núcleo ya pasaron localmente en Release y Debug con AddressSanitizer/UndefinedBehaviorSanitizer. La compilación y validación del módulo VST3 están configuradas en CI para Windows y Linux, pero aún no hay resultado remoto confirmado.
+**Importante:** el módulo VST3 actual es un shell de compatibilidad transparente (passthrough), no el producto DSP terminado. No se declara todavía compatible con FL Studio hasta ejecutar la validación del SDK y probar el binario en el DAW.
 
-## 1. Decisiones de implementación
+## 1. Núcleo DSP host-independiente
 
-- C++17 para el núcleo y el banco de pruebas.
-- Biblioteca estática sin dependencia del SDK VST3.
-- CMake y pruebas unitarias sin dependencias externas.
-- DSP y análisis offline separados de la interfaz gráfica.
-- Parámetros musicales y umbrales pendientes de validación con corpus vocal y escucha; no se fijan constantes arbitrarias.
+- C++17 y CMake.
+- Biblioteca estática PIC, apta para enlazarse dentro del módulo VST3.
+- Tipos temporales, validadores, curvas estáticas y conversión dB/amplitud.
+- Fixtures sintéticos deterministas.
+- Captura acotada y preasignada.
+- Descriptores iniciales RMS/pico por ventana y canal.
+- Snapshot compartido inmutable con comprobación de formato, configuración y cobertura.
+- Estadísticas contextuales descriptivas con mediana, MAD y rangos.
+- Seis suites de pruebas; 6/6 aprobadas localmente en Release y 6/6 en Debug con AddressSanitizer y UndefinedBehaviorSanitizer.
 
-## 2. Código implementado
+## 2. Primera integración VST3
 
-### Contratos y validación
-- Índices temporales enteros de 64 bits.
-- Intervalos [start, end), con inicio incluido y final excluido.
-- Formatos mono/estéreo para el primer prototipo.
-- Estados de captura y discontinuidades explícitos.
-- Configuración de análisis versionada.
-- Validación de rangos, formatos, ventanas, saltos, curvas y valores numéricos.
-- Conversión dB a amplitud lineal mediante 10^(dB/20); los valores no finitos se mantienen detectables y no se silencian de forma encubierta.
+- SDK oficial Steinberg VST3 3.8.1 fijado al commit `3cdf9ca5d1f5b1b21e0a86832aa4abe55607bd96`, con submódulos recursivos.
+- SDK integrado mediante CMake FetchContent; VSTGUI y ejemplos ajenos al producto desactivados para mantener el build reducido.
+- Procesador y controlador son componentes separados, enlazados por IDs de clase propios.
+- Bus principal mono/estéreo; el procesador rechaza configuraciones no soportadas.
+- Soporte de bloques de audio de 32 y 64 bits.
+- Procesamiento actual transparente: copia entrada a salida, respeta canales silenciosos y no altera el audio.
+- Estado del componente con cabecera mágica y versión explícita.
+- Sin asignaciones, análisis, bloqueos ni operaciones de disco en el callback de procesamiento.
+- El SDK Validator y la generación de `moduleinfo.json` quedan activados en la configuración de CMake.
 
-### Fixtures sintéticos
-- Generación determinista en memoria de silencio, seno e impulso.
-- Casos mono/estéreo y polaridad invertida para probar que el análisis no suma canales de forma peligrosa.
-- Validaciones de frecuencia, amplitud y límites temporales.
+Este shell demuestra la integración de API, factory, busses, tamaños de muestra, estado y ruta de procesamiento. No implementa todavía editor gráfico, parámetros de usuario, captura de análisis, curva de ganancia ni motores Clip Gain/Clip Peak.
 
-### Captura acotada
-- Memoria preasignada y capacidad fija.
-- Longitud esperada explícita para cada región.
-- Aceptación de bloques contiguos con posición temporal.
-- Detección de huecos y solapamientos.
-- Estados completo, parcial, discontinuo y cancelado.
-- Una región solo se marca completa si se recibieron exactamente todos los frames esperados.
+## 3. Compatibilidad objetivo
 
-El acumulador es independiente de VST3 y no es thread-safe. El llamador debe serializar sus operaciones y mantener el callback quiescente durante begin/finish/cancel. La integración de transporte, seek, loop, stop y cola real del callback sigue pendiente.
+La primera entrega objetivo es Windows x64 y VST3 para FL Studio de 64 bits. El SDK oficial declara soporte para Windows 10 x64 con MSVC 2019/2022. El equipo del usuario dispone de CPU x64; el build debe mantenerse eficiente y no depender de GPU.
 
-### Primera pasada numérica inicial
-- Descriptores por ventana y por canal: RMS, pico de muestra, validez finita y silencio digital.
-- Cobertura de la cola parcial final.
-- Canales analizados por separado; no se hace downmix.
-- Las ventanas con muestras no finitas quedan marcadas como evidencia inválida, sin contaminar las métricas numéricas.
+El paquete de Windows se genera como `PG Clip Gain Pro.vst3`, con la estructura de bundle VST3 de Steinberg. La CI compila además en Linux como plataforma secundaria. La salida Linux no sustituye al binario Windows que necesita FL Studio en el equipo del usuario.
 
-Estos descriptores son una base matemática inicial, no una métrica final de sonoridad percibida, un detector de voz ni un detector de transitorios profesional.
+## 4. Validación pendiente
 
-### Snapshot compartido
-- Publicación como objeto compartido de solo lectura.
-- Requiere captura completa y continua.
-- Verifica identidad de formato, número de frames y configuración exacta usada en el análisis.
-- Comprueba orden, cobertura, canales y coherencia de métricas.
-- Conserva ventanas inválidas señaladas para que los motores puedan abstenerse localmente.
+1. Confirmar que CMake obtiene el SDK y sus submódulos fijados.
+2. Compilar el módulo en Windows y Linux.
+3. Ejecutar el Validator oficial de Steinberg sobre el bundle generado.
+4. Revisar que el paquete contenga la arquitectura correcta y `moduleinfo.json`.
+5. Probar instalación, escaneo, carga, procesamiento transparente y guardado/restauración de proyecto en FL Studio.
+6. Mantener pruebas de regresión para mono/estéreo, float32/float64, buffers variables, silencio y estado.
 
-### Estadísticas contextuales descriptivas
-- Cuenta ventanas válidas, inválidas, silenciosas y no silenciosas por canal.
-- Calcula mediana, desviación absoluta mediana (MAD) y rangos de RMS/pico.
-- No establece referencia adaptativa, umbrales de actividad, frases ni intención musical.
+Un resultado verde de CI no reemplaza la prueba manual dentro de FL Studio.
 
-## 3. Validación realizada
+## 5. Límites actuales
 
-Seis ejecutables de pruebas cubren:
-1. contratos numéricos y curvas;
-2. fixtures PCM;
-3. captura contigua, huecos, solapamientos, capacidad y truncamiento;
-4. cobertura, RMS, pico, silencio y muestras no finitas;
-5. construcción y rechazo de snapshots inconsistentes;
-6. estadísticas contextuales, silencio y evidencia inválida.
+- El VST3 aún no tiene interfaz gráfica.
+- No captura una región completa del DAW.
+- No integra todavía una cola SPSC ni coordinación callback/worker.
+- No implementa la segunda pasada contextual ni segmentación vocal.
+- No implementa referencia adaptativa.
+- No implementa curvas Clip Gain ni Clip Peak.
+- No tiene todavía instalador ni paquete final de distribución.
 
-**Resultado local:** 6/6 suites aprobadas en Release y 6/6 en Debug con AddressSanitizer y UndefinedBehaviorSanitizer.
+## 6. Próximas etapas
 
-La CI de GitHub está configurada para compilar y ejecutar CTest en Ubuntu y Windows, pero todavía no hay una ejecución remota confirmada. La compilación verificada hasta ahora es local en Linux/GCC.
-
-## 4. Límites actuales
-
-- No hay todavía proyecto/descriptor VST3 ni binario instalable.
-- No se conectó la captura al callback real de un DAW.
-- No existe aún cola SPSC ni coordinación worker/callback.
-- No están resueltos los cambios de transporte, seek, loop, render offline ni restauración del host.
-- La primera pasada todavía no incorpora todos los descriptores espectrales/transitorios definidos.
-- No existe aún segmentación vocal, protección fonética refinada ni segunda pasada completa.
-- No se implementaron Clip Gain, Clip Peak, curvas finales ni interfaz gráfica.
-- No se crearon los cinco jueces de PG Audio Intelligence.
-
-## 5. Próximas etapas
-
-1. Integrar y probar la adquisición VST3 con un ciclo de vida seguro y una transferencia acotada callback/worker.
-2. Ampliar fixtures para envolventes, transitorios, ruido, respiraciones proxy y colas.
-3. Ampliar descriptores de primera pasada y validar invariancia ante distintos tamaños de bloque.
-4. Desarrollar la segunda pasada contextual: continuidad, actividad candidata, pausas, límites y zonas protegidas.
-5. Validar segmentación con grabaciones vocales reales y anotación humana.
-6. Implementar perfiles de frase y referencia adaptativa, sin objetivo absoluto fijo.
-7. Implementar curvas Clip Gain y probarlas mediante escucha A/B.
-8. Implementar Clip Peak como motor independiente.
-9. Integrar snapshots, coordinación, persistencia y pruebas en DAWs.
-10. Diseñar la GUI después de validar el comportamiento DSP.
+1. Conseguir build y Validator verde en Windows/Linux.
+2. Revisar cualquier fallo del Validator y corregirlo antes de añadir DSP al plugin.
+3. Diseñar la adquisición VST3 con callback acotado y worker seguro.
+4. Completar descriptores y segunda pasada contextual.
+5. Validar segmentación con grabaciones vocales y anotación humana.
+6. Construir referencia adaptativa y motor Clip Gain.
+7. Construir Clip Peak como motor separado.
+8. Añadir persistencia real de curvas y edición manual.
+9. Crear GUI oscura con waveform real después de validar el DSP.
+10. Probar en FL Studio de 64 bits y preparar paquete instalable.
 
 Los cinco jueces de PG Audio Intelligence permanecen fuera de este alcance y no se implementarán sin autorización explícita.
