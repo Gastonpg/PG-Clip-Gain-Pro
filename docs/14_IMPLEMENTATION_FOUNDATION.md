@@ -1,6 +1,6 @@
 # PG Clip Gain Pro — Base de implementación v0.1
 
-**Estado:** primer esqueleto de código creado y compilado localmente con CMake/GCC; pruebas iniciales aprobadas en configuración Release.
+**Estado:** base C++17 compilada localmente con CMake/GCC en Release; 2/2 ejecutables de prueba aprobados.
 **Alcance:** contratos de dominio independientes del host VST3. No contiene todavía captura de audio, análisis de dos pasadas, segmentación ni motores Clip Gain/Clip Peak.
 
 ## 1. Decisión de implementación
@@ -21,6 +21,7 @@
 - Puntos de curva estática expresados en dB.
 - Validadores que rechazan rangos vacíos, límites fuera de captura, formatos no soportados, configuraciones inválidas, ganancias no finitas y puntos de curva desordenados o duplicados.
 - Conversión de dB a amplitud lineal mediante 10^(dB/20).
+- Generadores PCM deterministas en memoria para silencio, seno e impulso, con soporte mono/estéreo y canal derecho invertido para pruebas de polaridad.
 
 ## 3. Límites deliberados
 
@@ -30,13 +31,13 @@ Los validadores son defensas de entrada, no sustituyen las pruebas del algoritmo
 
 ## 4. Pruebas iniciales
 
-tests/core/test_types.cpp contiene comprobaciones deterministas activas también en Release para formatos, rangos temporales, estados de captura, configuración de análisis, integridad de curvas y conversión de ganancia. La ejecución local terminó con 1/1 pruebas aprobadas.
+tests/core/test_types.cpp contiene comprobaciones deterministas activas también en Release para formatos, rangos temporales, estados de captura, configuración de análisis, integridad de curvas y conversión de ganancia. La ejecución local terminó con 2/2 pruebas aprobadas. Las comprobaciones usan una función de verificación propia, no assert, para seguir activas en Release.
 
 ## 5. Próximas etapas
 
 1. Verificar la compilación automatizada en Windows y Linux; la compilación local en Linux ya pasó.
 2. Ampliar pruebas de límites, overflow y datos inválidos.
-3. Implementar fixtures PCM deterministas y métricas de referencia.
+3. Ampliar fixtures PCM deterministas con envolventes, transitorios y señales proxy para segmentación y sonoridad.
 4. Diseñar el acumulador de captura por bloques con detección de huecos, solapamientos y cambios de posición.
 5. Implementar la primera pasada de descriptores sin segmentación heurística prematura.
 
