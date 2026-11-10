@@ -11,8 +11,20 @@ GainCurveRuntime::points() const noexcept {
     return points_;
 }
 
-GainCurveRuntimeResult prepareGainCurveRuntime(const GainCurve& curve) {
+GainCurveRuntimeResult prepareGainCurveRuntime(
+    const GainCurve& curve,
+    const GainCurveRuntimeConfig& config) {
     GainCurveRuntimeResult result;
+
+    if (!std::isfinite(config.maximumBoostDb) ||
+        config.maximumBoostDb < 0.0 ||
+        !std::isfinite(config.maximumCutDb) ||
+        config.maximumCutDb < 0.0) {
+        result.status = GainCurveRuntimeStatus::InvalidCurve;
+        result.issue = {ValidationCode::InvalidWindow,
+                        "Runtime gain safety limits must be finite and non-negative."};
+        return result;
+    }
 
     if (const auto issue = validate(curve)) {
         result.status = GainCurveRuntimeStatus::InvalidCurve;
@@ -29,6 +41,15 @@ GainCurveRuntimeResult prepareGainCurveRuntime(const GainCurve& curve) {
 
     result.runtime.points_.reserve(curve.points.size());
     for (const auto& point : curve.points) {
+        if (point.gainDb > config.maximumBoostDb ||
+            point.gainDb < -config.maximumCutDb) {
+            result.runtime.points_.clear();
+            result.status = GainCurveRuntimeStatus::InvalidCurve;
+            result.issue = {ValidationCode::NonFiniteGain,
+                            "Runtime curve exceeds the configured combined gain safety limits."};
+            return result;
+        }
+
         const double linearGain = gainDbToLinear(point.gainDb);
         if (!std::isfinite(linearGain) || linearGain < 0.0) {
             result.runtime.points_.clear();
