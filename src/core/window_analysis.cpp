@@ -55,6 +55,7 @@ WindowAnalysisResult analyzeWindowDescriptors(
     result.status = WindowAnalysisStatus::Success;
     result.format = audio.format;
     result.totalFrames = audio.frameCount;
+    result.config = config;
     result.windows.reserve(static_cast<std::size_t>(windowCount));
 
     const auto channelCount =
