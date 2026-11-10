@@ -1,4 +1,5 @@
 #include "pgclip_processor.h"
+#include "pgclip_cids.h"
 
 #include "base/source/fstreamer.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
@@ -62,8 +63,14 @@ tresult PLUGIN_API PGClipGainProcessor::initialize(FUnknown* context) {
         return result;
     }
 
+    setControllerClass(PGClipGainControllerUID);
     addAudioInput(STR16("Audio In"), SpeakerArr::kStereo);
     addAudioOutput(STR16("Audio Out"), SpeakerArr::kStereo);
+    return kResultOk;
+}
+
+tresult PLUGIN_API PGClipGainProcessor::getControllerClassId(TUID classId) {
+    PGClipGainControllerUID.toTUID(classId);
     return kResultOk;
 }
 
