@@ -10,9 +10,10 @@ No se inferirá que se capturó el clip entero si el usuario comenzó tarde, hub
 
 ## 2. Contrato de tiempo
 
-- Usar `ProcessData::processContext` y `ProcessContext::projectTimeSamples` solo cuando el bit `kProjectTimeMusicValid`? No: la validez de posición de muestras debe verificarse con el flag de tiempo de proyecto definido por la versión exacta del SDK VST3 integrada. No asumir que un flag de tiempo musical valida muestras.
-- Antes de implementar, inspeccionar el encabezado real del SDK fijado por CMake y confirmar el nombre exacto del flag de validez para `projectTimeSamples`.
-- Si el host no proporciona posición absoluta válida, no inventar una. La instancia puede mantener un contador monotónico local desde el primer bloque capturado, pero no podrá detectar todos los seeks/loops externos. En ese modo la UI debe advertir la limitación y la captura solo será aceptable si la continuidad local está garantizada por el host y el usuario.
+- La versión exacta del SDK fijada en CMake fue inspeccionada: `ProcessContext::projectTimeSamples` está documentado como **siempre válido**, por lo que no necesita un flag opcional de validez.
+- `ProcessContext::kPlaying` indica transporte en reproducción; `kCycleActive` indica ciclo activo. `continousTimeSamples` es opcional y solo es válido cuando `kContTimeValid` está presente.
+- Comparar `projectTimeSamples` de cada bloque con el final esperado del bloque anterior. Un salto, retroceso o solapamiento invalida la captura; si el host entrega subbloques que cruzan un ciclo, el salto se detectará en el siguiente bloque, sin asumir que el host dividió el bloque en el límite exacto.
+- La inspección se realizó sobre el submódulo `vst3_pluginterfaces` fijado por el commit del SDK `3cdf9ca5d1f5b1b21e0a86832aa4abe55607bd96`, submódulo commit `4f547e8e102b47de4a8b8aaf343c73b700786372`, archivo `vst/ivstprocesscontext.h`. Referencia: https://github.com/steinbergmedia/vst3_pluginterfaces/blob/4f547e8e102b47de4a8b8aaf343c73b700786372/vst/ivstprocesscontext.h.
 - Cada bloque encolado lleva posición inicial, número de frames, canales y formato original. Huecos, solapamientos y retrocesos invalidan la captura completa.
 
 ## 3. Máquina de estados y propiedad de datos
