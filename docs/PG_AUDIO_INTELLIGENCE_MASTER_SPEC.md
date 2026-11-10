@@ -32,7 +32,7 @@ El sistema se divide en cuatro capas:
 
 ### A. Análisis DSP compartido
 
-Una pasada de análisis común produce descriptores y eventos que consumen ambos motores y los jueces:
+El análisis compartido se ejecuta en dos pasadas offline: primero describe la señal y genera candidatos; después refina regiones, frases, protecciones y perfiles contextuales. El snapshot común resultante lo consumen ambos motores y, en una fase futura autorizada, los jueces:
 
 - actividad vocal y regiones candidatas;
 - límites probables de palabras/frases y pausas;
@@ -42,7 +42,7 @@ Una pasada de análisis común produce descriptores y eventos que consumen ambos
 - continuidad temporal, respiraciones y colas;
 - estructura relativa de secciones cuando pueda inferirse con suficiente confianza.
 
-El análisis no debe depender únicamente de un umbral de energía ni tratar cada silencio como un límite de frase. Debe combinar histéresis, duración, continuidad, contexto y señales prosódicas. Si no hay suficiente evidencia para clasificar una región, debe marcarla como incierta.
+La pasada 1 no genera correcciones. La pasada 2 tampoco decide magnitudes de ganancia: entrega un snapshot común e inmutable. El análisis no debe depender únicamente de un umbral de energía ni tratar cada silencio como un límite de frase. Debe combinar histéresis, duración, continuidad, contexto y señales prosódicas. Si no hay suficiente evidencia para clasificar una región, debe marcarla como incierta.
 
 ### B. Motores de edición independientes
 
@@ -256,7 +256,7 @@ Una mejora numérica no se considera éxito si degrada la naturalidad en pruebas
 
 **Fase 3 — Banco de pruebas:** probar casos controlados y comparar con anotaciones humanas.
 
-**Fase 4 — Jueces deterministas:** implementar primero reglas y evaluadores especializados, reproducibles y económicos.
+**Fase 4 — Jueces deterministas (requiere autorización del usuario):** implementar primero reglas y evaluadores especializados, reproducibles y económicos. No forma parte de la base DSP ni puede iniciarse sin permiso explícito.
 
 **Fase 5 — Arbitraje y sugerencias:** incorporar juez principal, explicaciones y aceptar/rechazar/editar.
 
