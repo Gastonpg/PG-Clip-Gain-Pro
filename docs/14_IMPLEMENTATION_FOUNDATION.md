@@ -1,6 +1,6 @@
 # PG Clip Gain Pro — Base de implementación v0.4
 
-**Estado:** núcleo DSP C++17, prototipos iniciales de análisis y primer módulo VST3 integrados en el proyecto. La versión anterior del núcleo pasó 6/6 suites localmente en Release y Debug con AddressSanitizer/UndefinedBehaviorSanitizer. Desde entonces se ampliaron descriptores y validaciones, y el banco actual tiene 10 suites configuradas; el código actual completo debe revalidarse. La compilación/validación VST3 está configurada en CI para Windows x64 y Linux x64, pero todavía no hay resultado remoto confirmado.
+**Estado:** núcleo DSP C++17, prototipos iniciales de análisis y primer módulo VST3 integrados en el proyecto. La versión anterior del núcleo pasó 6/6 suites localmente en Release y Debug con AddressSanitizer/UndefinedBehaviorSanitizer. Desde entonces se ampliaron descriptores y validaciones, y el banco actual tiene 11 suites configuradas; el código actual completo debe revalidarse. La compilación/validación VST3 está configurada en CI para Windows x64 y Linux x64, pero todavía no hay resultado remoto confirmado.
 **Importante:** el VST3 actual es un shell transparente (passthrough), no el producto terminado. No se declara compatible con FL Studio hasta pasar el Validator y probar el binario en FL Studio 2026 x64.
 
 ## 1. Núcleo DSP host-independiente
@@ -36,7 +36,7 @@ CMake define 10 ejecutables:
 9. detector de actividad y abstención;
 10. perfiles, referencia adaptativa y recomendaciones Clip Gain.
 
-La versión anterior de seis suites pasó localmente en Release y Debug con AddressSanitizer y UndefinedBehaviorSanitizer. Después se modificaron las suites de descriptores/snapshot y se añadieron cuatro suites nuevas. **Las 10 suites actuales deben ejecutarse de nuevo**; no se afirma que esta versión ampliada ya haya pasado.
+La versión anterior de seis suites pasó localmente en Release y Debug con AddressSanitizer y UndefinedBehaviorSanitizer. Después se modificaron las suites de descriptores/snapshot y se añadieron cuatro suites nuevas. **Las 11 suites actuales deben ejecutarse de nuevo**; no se afirma que esta versión ampliada ya haya pasado.
 
 ## 3. Primera integración VST3
 
