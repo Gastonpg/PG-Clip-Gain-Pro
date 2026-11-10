@@ -11,7 +11,7 @@ La CI debe terminar correctamente en `windows-latest` x64, incluyendo:
 - generación de `moduleinfo.json`;
 - siete suites de pruebas del núcleo.
 
-El artefacto de Windows se publica con el nombre `PG-Clip-Gain-Pro-VST3-windows-latest`; GitHub Actions lo entrega como ZIP descargable. No instalar un artefacto de una ejecución fallida o sin el Validator aprobado.
+El artefacto de Windows se publica con el nombre `PG-Clip-Gain-Pro-VST3-windows-latest`; GitHub Actions lo entrega como ZIP descargable con `PGClipGainPro.vst3` en la raíz. No instalar un artefacto de una ejecución fallida o sin el Validator aprobado.
 
 ## 2. Instalar
 
