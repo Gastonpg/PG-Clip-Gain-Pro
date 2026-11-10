@@ -11,6 +11,9 @@ QueuedCaptureAssembler::QueuedCaptureAssembler(
     std::uint32_t maxFramesPerBlock)
     : format_(format),
       accumulator_(format, captureCapacityFrames) {
+    if (const auto issue = validate(format_)) {
+        throw std::invalid_argument(issue.message);
+    }
     if (maxFramesPerBlock == 0U) {
         throw std::invalid_argument("Maximum queue block size must be non-zero.");
     }
@@ -28,6 +31,10 @@ bool QueuedCaptureAssembler::begin(
     SpscAudioBlockQueue& queue,
     FrameIndex sourceStartFrame,
     FrameIndex expectedFrameCount) noexcept {
+    if (!queue.isInitialized() || queue.queuedBlocks() != 0U) {
+        return false;
+    }
+
     expectedFrameCount_ = expectedFrameCount;
     droppedBlocksAtBegin_ = queue.droppedBlocks();
     return accumulator_.begin(sourceStartFrame, expectedFrameCount);
