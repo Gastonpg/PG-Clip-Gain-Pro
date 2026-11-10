@@ -18,7 +18,7 @@ Este documento transforma la filosofía del producto en un flujo de procesamient
 8. Ejecutar verificaciones de seguridad y evitar doble corrección.
 9. Presentar las curvas y sugerencias al usuario; no aplicar cambios irreversibles.
 
-## 2. Análisis compartido
+## 2. Análisis compartido en dos pasadas\n\nLa adquisición puede requerir reproducir la región para que el host entregue sus bloques. La captura se realiza en el recorrido de audio con operaciones acotadas; el análisis complejo se ejecuta después en un worker, fuera del hilo de audio. La pasada 1 produce el mapa descriptivo; la pasada 2 lo refina con contexto. La definición detallada está en `12_TWO_PASS_SHARED_ANALYSIS_PIPELINE.md`.
 
 ### 2.1 Preparación de señal
 
@@ -109,7 +109,7 @@ Para cada frase fiable:
 - obtener una diferencia relativa;
 - aplicar un factor de intensidad Sutil / Equilibrada / Pronunciada;
 - limitar correcciones máximas y pendientes mediante parámetros conservadores;
-- reducir la corrección si el juez de interpretación marca indicios expresivos;
+- reducir o abstenerse ante indicadores deterministas de variación expresiva y ambigüedad; cualquier evaluación de jueces queda para una fase posterior autorizada;
 - abstenerse cuando el resultado dependa de una clasificación incierta.
 
 La corrección debe preservar la dinámica dentro de la frase. No se debe calcular una ganancia distinta para cada sílaba como comportamiento predeterminado.
