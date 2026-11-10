@@ -139,6 +139,30 @@ int main() {
                               GainRecommendationAction::Abstain,
                       "abstain rather than adjust a phrase marked ineligible");
 
+                const auto curve = buildClipGainCurve(
+                    recommendations.recommendations,
+                    static_cast<FrameIndex>(vocalTake.size()),
+                    ClipGainCurveConfig{120U, 120U});
+                check(curve.status == ClipGainCurveStatus::Ready &&
+                          curve.curve.points.size() == 8U,
+                      "build separate static phrase ramps with zero-gain gaps");
+                if (curve.status == ClipGainCurveStatus::Ready) {
+                    check(!validate(curve.curve) &&
+                              curve.curve.points[1U].frame == 3000U &&
+                              curve.curve.points[1U].gainDb > 2.5 &&
+                              curve.curve.points[5U].gainDb < -2.5,
+                          "validate ordered curve points and relative phrase gains");
+                }
+
+                auto overlappingRecommendations = recommendations.recommendations;
+                overlappingRecommendations[2U].range.start = 3800U;
+                const auto overlapCurve = buildClipGainCurve(
+                    overlappingRecommendations,
+                    static_cast<FrameIndex>(vocalTake.size()),
+                    ClipGainCurveConfig{120U, 120U});
+                check(overlapCurve.status == ClipGainCurveStatus::OverlappingRegions,
+                      "reject overlapping phrase gain regions");
+
                 const auto zeroStrength = recommendClipGain(
                     phraseProfiles.profiles,
                     reference,
