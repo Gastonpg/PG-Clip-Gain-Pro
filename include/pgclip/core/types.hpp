@@ -78,6 +78,6 @@ ValidationIssue validate(const CaptureDescriptor& capture);
 ValidationIssue validate(const AnalysisConfig& config);
 ValidationIssue validate(const GainCurve& curve);
 
-double gainDbToLinear(double gainDb);
+double gainDbToLinear(double gainDb) noexcept;
 
 } // namespace pgclip
