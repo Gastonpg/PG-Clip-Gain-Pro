@@ -36,6 +36,10 @@ El callback será el único productor de la SPSC; el worker, el único consumido
 
 Si la preparación falla antes de publicar `Armed`, `completeArm(false)` pasa directamente a `Draining`: nunca hubo productor activo, pero el worker todavía debe limpiar los recursos parciales antes de publicar `Rejected`. El armado correcto requiere que el worker prepare el ensamblador antes de publicar `Armed`. Al detener o cancelar, el consumidor no debe finalizar ni liberar recursos hasta que el host garantice que el callback dejó de ejecutarse y no puede iniciar otra operación de producción. Ese punto de quiescencia es un contrato externo que la integración VST3 aún debe resolver; el coordinador no lo simula ni lo presume.
 
+### Adaptador planar de bloques (implementado, aún no integrado al VST3)
+
+El helper host-independiente `pushPlanarAudioInChunks` recibe punteros planares del host y divide bloques mayores que el slot máximo en subbloques contiguos, sin asignaciones ni esperas. Devuelve el número exacto de bloques/frames aceptados y un indicador `complete`; si la cola se llena a mitad de una llamada, informa el prefijo aceptado y el error, y el contador de descartes de la cola invalida esa captura. La suite `pgclip_planar_queue_writer_tests` cubre división de 10 frames en slots 4+4+2, continuidad de posiciones, orden de muestras y desbordamiento parcial. El helper todavía no se llama desde `process()`, y la suite está configurada pero no ejecutada.
+
 ## 4. Reglas del callback de audio
 
 - No asignar ni liberar memoria, crear hilos, usar mutex/condition variable, hacer I/O, logging, análisis, FFT, detección de voz o conversión costosa.
