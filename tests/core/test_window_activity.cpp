@@ -90,8 +90,13 @@ int main() {
             check(result.windows[0U].state == WindowActivityState::BelowThreshold &&
                       result.windows[1U].state == WindowActivityState::BelowThreshold,
                   "leave low-level background below activity threshold");
-            check(result.windows[6U].state == WindowActivityState::Active,
-                  "detect a separate later vocal candidate");
+            check(result.windows[6U].state == WindowActivityState::Uncertain,
+                  "keep an isolated one-window burst uncertain");
+            check(result.regions.size() == 1U &&
+                      result.regions[0U].range.start == 960U &&
+                      result.regions[0U].range.end == 1920U &&
+                      result.regions[0U].activeWindows == 2U,
+                  "group sustained activity into a phrase-region candidate");
         }
     }
 
@@ -105,6 +110,12 @@ int main() {
             *bridgedSnapshot.snapshot, detectorConfig);
         check(result.windows[3U].state == WindowActivityState::BridgedPause,
               "bridge one short internal pause without deleting its position");
+        check(result.regions.size() == 1U &&
+                  result.regions[0U].containsBridgedPause &&
+                  result.regions[0U].bridgedPauseWindows == 1U &&
+                  result.regions[0U].range.start == 480U &&
+                  result.regions[0U].range.end == 2880U,
+              "preserve the bridged pause inside a candidate region");
     } else {
         check(false, "build short-pause fixture snapshot");
     }
