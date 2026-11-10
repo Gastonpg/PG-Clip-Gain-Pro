@@ -10,6 +10,7 @@ public:
     static FUnknown* createInstance(void* context);
 
     tresult PLUGIN_API initialize(FUnknown* context) SMTG_OVERRIDE;
+    tresult PLUGIN_API getControllerClassId(TUID classId) SMTG_OVERRIDE;
     tresult PLUGIN_API setBusArrangements(
         SpeakerArrangement* inputs, int32 numIns,
         SpeakerArrangement* outputs, int32 numOuts) SMTG_OVERRIDE;
