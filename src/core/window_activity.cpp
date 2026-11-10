@@ -25,10 +25,10 @@ ValidationIssue validate(const ActivityDetectionConfig& config) {
     }
 
     if (!std::isfinite(config.minimumContrastDb) ||
-        config.minimumContrastDb < 0.0 ||
+        config.minimumContrastDb <= 0.0 ||
         config.minimumActiveWindows == 0U) {
         return {ValidationCode::InvalidWindow,
-                "Activity floor, contrast, and minimum run configuration are invalid."};
+                "Activity contrast and minimum active-run configuration are invalid."};
     }
 
     return {};
