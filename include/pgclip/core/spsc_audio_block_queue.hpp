@@ -7,6 +7,9 @@
 
 namespace pgclip {
 
+static_assert(std::atomic<std::uint64_t>::is_always_lock_free,
+              "The audio queue requires lock-free 64-bit atomics.");
+
 enum class AudioSampleFormat {
     Float32,
     Float64
