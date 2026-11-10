@@ -56,4 +56,29 @@ ClipPeakResult detectClipPeakEvents(
     const ActivityDetectionResult& activity,
     const ClipPeakConfig& config);
 
+struct ClipPeakCurveConfig {
+    FrameIndex rampInFrames{0};
+    FrameIndex rampOutFrames{0};
+};
+
+enum class ClipPeakCurveStatus {
+    Ready,
+    InvalidConfiguration,
+    InvalidEvents,
+    OverlappingEvents
+};
+
+struct ClipPeakCurveResult {
+    ClipPeakCurveStatus status{ClipPeakCurveStatus::InvalidConfiguration};
+    ValidationIssue issue{};
+    GainCurve curve{};
+};
+
+// Builds local static attenuation ramps only for events approved by the
+// detector. Review-only events remain untouched and still protect overlaps.
+ClipPeakCurveResult buildClipPeakCurve(
+    const std::vector<PeakEvent>& events,
+    FrameIndex totalFrames,
+    const ClipPeakCurveConfig& config);
+
 } // namespace pgclip
