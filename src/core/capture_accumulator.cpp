@@ -23,11 +23,22 @@ CaptureAccumulator::CaptureAccumulator(AudioFormat format,
     storage_.resize(static_cast<std::size_t>(capacityFrames_) * channels);
 }
 
-void CaptureAccumulator::begin(FrameIndex sourceStartFrame) noexcept {
+bool CaptureAccumulator::begin(FrameIndex sourceStartFrame,
+                               FrameIndex expectedFrameCount) noexcept {
     capturedFrames_ = 0U;
+    expectedFrameCount_ = expectedFrameCount;
     expectedSourceFrame_ = sourceStartFrame;
     hasDiscontinuities_ = false;
+
+    if (expectedFrameCount_ == 0U ||
+        expectedFrameCount_ > std::numeric_limits<FrameIndex>::max() - sourceStartFrame) {
+        state_ = CaptureState::Partial;
+        hasDiscontinuities_ = true;
+        return false;
+    }
+
     state_ = CaptureState::Capturing;
+    return true;
 }
 
 CaptureAppendResult CaptureAccumulator::append(
@@ -55,7 +66,8 @@ CaptureAppendResult CaptureAccumulator::append(
         return CaptureAppendResult::OverlapDetected;
     }
 
-    if (frameCount > capacityFrames_ - capturedFrames_) {
+    if (frameCount > capacityFrames_ - capturedFrames_ ||
+        frameCount > expectedFrameCount_ - capturedFrames_) {
         state_ = CaptureState::Partial;
         return CaptureAppendResult::CapacityExceeded;
     }
@@ -75,7 +87,7 @@ CaptureAppendResult CaptureAccumulator::append(
 
 void CaptureAccumulator::finish() noexcept {
     if (state_ == CaptureState::Capturing) {
-        state_ = capturedFrames_ > 0U
+        state_ = capturedFrames_ == expectedFrameCount_
             ? CaptureState::Complete
             : CaptureState::Partial;
     }
