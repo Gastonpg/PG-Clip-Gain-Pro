@@ -76,6 +76,12 @@ int main() {
     check(truncated.descriptor().state == CaptureState::Partial,
           "do not mark early-stopped region complete");
 
+    CaptureAccumulator tooLargeBegin(AudioFormat{48000U, 1U}, 4U);
+    check(!tooLargeBegin.begin(0U, 5U),
+          "reject expected capture longer than preallocated capacity");
+    check(tooLargeBegin.descriptor().state == CaptureState::Partial,
+          "oversized capture request remains explicitly partial");
+
     CaptureAccumulator invalidBegin(AudioFormat{48000U, 1U}, 4U);
     check(!invalidBegin.begin(0U, 0U),
           "reject zero-length expected capture region");
