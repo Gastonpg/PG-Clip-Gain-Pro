@@ -37,6 +37,31 @@ struct GainCurveRuntimeResult {
 
 GainCurveRuntimeResult prepareGainCurveRuntime(const GainCurve& curve);
 
+struct CurveCombinationConfig {
+    double maximumCombinedBoostDb{0.0};
+    double maximumCombinedCutDb{0.0};
+};
+
+enum class CurveCombinationStatus {
+    Ready,
+    InvalidConfiguration,
+    InvalidInputCurve
+};
+
+struct CurveCombinationResult {
+    CurveCombinationStatus status{CurveCombinationStatus::InvalidConfiguration};
+    ValidationIssue issue{};
+    GainCurve curve{};
+};
+
+// Combines independent static engines in the linear-gain domain and applies
+// a shared safety ceiling to the total correction.
+CurveCombinationResult combineStaticGainCurves(
+    const GainCurve& clipGainCurve,
+    const GainCurve& clipPeakCurve,
+    FrameIndex totalFrames,
+    const CurveCombinationConfig& config);
+
 struct MutableAudioBlockView {
     void* const* channelData{nullptr};
     FrameIndex sourceStartFrame{0};
