@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <limits>
 #include <thread>
 #include <vector>
 
@@ -124,7 +125,7 @@ int main() {
     check(queue.tryPush(badBlock) == AudioQueueResult::InvalidBlock,
           "reject missing pointer for a channel not marked silent");
     badBlock = block;
-    badBlock.sourceStartFrame = UINT64_MAX - 1U;
+    badBlock.sourceStartFrame = std::numeric_limits<std::uint64_t>::max() - 1U;
     check(queue.tryPush(badBlock) == AudioQueueResult::InvalidBlock,
           "reject source timeline overflow");
 
