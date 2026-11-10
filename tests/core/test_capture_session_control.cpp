@@ -38,7 +38,7 @@ int main() {
           "successful drain reaches captured state");
 
     check(session.requestArm(), "captured session can be armed again");
-    check(!session.completeArm(false), "failed preparation cannot arm session");
+    check(session.completeArm(false), "worker reports failed preparation");
     check(session.state() == CaptureSessionState::Rejected,
           "failed preparation rejects session");
 
