@@ -57,8 +57,11 @@ Un resultado verde de CI no reemplaza la prueba manual dentro de FL Studio.
 - No captura una región completa del DAW.
 - No hay todavía coordinación real entre el callback del VST3 y un hilo worker; la cola y el ensamblador solo están probados como módulos host-independientes.
 - El detector de actividad por ventanas ya produce regiones candidatas y conserva pausas breves, pero sigue siendo una primera pasada energética; no implementa todavía refinamiento fonético ni segmentación final de frases.
+- Perfiles provisionales de frase con medianas de RMS, pico, media absoluta y factor de cresta, usando solo ventanas activas válidas.
+- Referencia adaptativa experimental por cuantíl de perfiles elegibles y MAD, calculada dentro de la propia grabación; no impone un nivel absoluto.
+- Recomendaciones Clip Gain relativas por frase, con intensidad y límites configurables, y abstención por confianza. Son propuestas de ganancia estática, no procesamiento automático ni curvas finales.
 - No implementa referencia adaptativa.
-- No implementa curvas Clip Gain ni Clip Peak.
+- No implementa todavía curvas Clip Gain finales, editor manual ni motor Clip Peak.
 - No tiene todavía instalador ni paquete final de distribución.
 
 ## 6. Próximas etapas
