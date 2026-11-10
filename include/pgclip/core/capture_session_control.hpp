@@ -14,7 +14,9 @@ enum class CaptureSessionState : std::uint8_t {
     Armed,
     StopRequested,
     CancelRequested,
+    RejectRequested,
     Draining,
+    CancelDraining,
     Captured,
     Rejected,
     Cancelled
@@ -37,10 +39,12 @@ public:
     // executing and cannot start another producer operation.
     bool acknowledgeProducerQuiesced() noexcept;
 
-    // Worker calls this only after draining and validating the capture.
+    // Worker calls this only after draining/cancelling and releasing its
+    // session-owned resources. A terminal state is published only afterward.
     bool completeDrain(bool captureIsCompleteAndValid) noexcept;
 
-    // Marks an active session unusable (e.g. queue overflow or discontinuity).
+    // Marks an active session unusable. It must still pass through producer
+    // quiescence and worker cleanup before the session can be armed again.
     void reject() noexcept;
 
     CaptureSessionState state() const noexcept;
