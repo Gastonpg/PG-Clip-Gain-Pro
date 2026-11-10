@@ -91,6 +91,16 @@ int main() {
               std::abs(cappedCombined.curve.points[2U].gainDb + 6.0) < 1.0e-6,
           "cap the combined attenuation to the shared safety limit");
 
+    const GainCurve extraBoost{{
+        GainPoint{0U, 0.0}, GainPoint{5U, 12.0}, GainPoint{10U, 0.0}
+    }};
+    const auto cappedBoost = combineStaticGainCurves(
+        extraBoost, GainCurve{}, 10U,
+        CurveCombinationConfig{6.0, 6.0});
+    check(cappedBoost.status == CurveCombinationStatus::Ready &&
+              std::abs(cappedBoost.curve.points[2U].gainDb - 6.0) < 1.0e-6,
+          "cap the combined boost to the shared safety limit");
+
     const GainCurve outsideCurve{{
         GainPoint{0U, 0.0}, GainPoint{11U, 3.0}
     }};
