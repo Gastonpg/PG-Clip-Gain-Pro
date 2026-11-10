@@ -79,6 +79,11 @@ int main() {
                   phraseProfiles.profiles.size() == 3U,
               "measure robust profiles for all candidate phrases");
 
+        const auto invalidProfileConfig = analyzePhraseProfiles(
+            *snapshot.snapshot, activity, PhraseProfileConfig{0U, 0.5});
+        check(invalidProfileConfig.status == PhraseProfileStatus::InvalidConfiguration,
+              "reject zero minimum active windows");
+
         if (phraseProfiles.profiles.size() == 3U) {
             check(phraseProfiles.profiles[0U].eligibleForReference &&
                       phraseProfiles.profiles[1U].eligibleForReference &&
@@ -148,14 +153,6 @@ int main() {
                   "do not generate corrections without a valid reference");
         }
     }
-
-    const auto invalidProfileConfig = analyzePhraseProfiles(
-        snapshot.snapshot ? *snapshot.snapshot
-                          : SharedAnalysisSnapshot{}, // placeholder removed below
-        ActivityDetectionResult{},
-        PhraseProfileConfig{0U, 0.5});
-    check(invalidProfileConfig.status == PhraseProfileStatus::InvalidConfiguration,
-          "reject zero minimum active windows");
 
     if (failures != 0) {
         std::cerr << failures << " Clip Gain foundation test(s) failed.\n";
