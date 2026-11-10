@@ -2,7 +2,7 @@
 
 **Proyecto:** PG Clip Gain Pro  
 **Versión:** 0.1 — especificación de diseño  
-**Estado:** Pendiente de prototipo, calibración y validación auditiva
+**Estado:** prototipo conservador de actividad por ventanas implementado; segmentación de frases, calibración y validación auditiva pendientes
 
 ## 1. Objetivo
 
@@ -32,6 +32,10 @@ Estados conceptuales:
 - UNCERTAIN: evidencia insuficiente o contradictoria.
 
 Son etiquetas de análisis, no reconocimiento fonético.
+
+## 3.1. Prototipo actual de actividad por ventanas
+
+La primera implementación en C++ produce etiquetas candidatas por ventana mediante RMS representativo entre canales, cuantiles de nivel no silencioso, umbrales relativos de entrada/salida, histéresis y puente de pausas cortas. Si no existe contraste estadístico suficiente, se abstiene y marca la evidencia como incierta. Los parámetros se suministran explícitamente y no hay un preset de producción validado. Este prototipo no reconoce voz ni decide límites finales de frase.
 
 ## 3. Análisis por ventanas
 
