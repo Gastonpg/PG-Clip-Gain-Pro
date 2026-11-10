@@ -2,7 +2,7 @@
 
 Plugin VST3 de edición vocal inteligente mediante curvas estáticas de Clip Gain. El objetivo es mejorar la consistencia de nivel sin borrar la interpretación ni recurrir a compresión, limitación o saturación.
 
-> Estado actual: diseño técnico fundacional. Todavía no hay motor DSP implementado ni binario VST3 validado.
+> Estado actual: base C++17 iniciada y compilada localmente; los contratos y las pruebas unitarias iniciales pasan. Todavía no hay captura VST3, motores DSP completos ni binario validado.
 
 ## Filosofía del producto
 
