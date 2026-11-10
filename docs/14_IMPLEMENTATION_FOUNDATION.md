@@ -1,6 +1,6 @@
 # PG Clip Gain Pro — Base de implementación v0.1
 
-**Estado:** base C++17 compilada localmente con CMake/GCC en Release; 3/3 ejecutables de prueba aprobados.
+**Estado:** base C++17 compilada localmente con CMake/GCC en Release; 4/4 ejecutables de prueba aprobados.
 **Alcance:** contratos de dominio independientes del host VST3. No contiene todavía captura de audio, análisis de dos pasadas, segmentación ni motores Clip Gain/Clip Peak.
 
 ## 1. Decisión de implementación
@@ -23,16 +23,17 @@
 - Conversión de dB a amplitud lineal mediante 10^(dB/20).
 - Generadores PCM deterministas en memoria para silencio, seno e impulso, con soporte mono/estéreo y canal derecho invertido para pruebas de polaridad.
 - Acumulador de captura por bloques con memoria preasignada, longitud esperada explícita, verificación de continuidad, detección de huecos/solapamientos, límite de capacidad y estados completo/parcial/cancelado.
+- Primera pasada numérica inicial: descriptores por ventana y por canal (RMS, pico de muestra, validez finita y silencio digital), con cobertura de cola parcial y sin sumar canales.
 
 ## 3. Límites deliberados
 
 La primera versión admite únicamente mono y estéreo en el contrato inicial. No se mezclan canales para análisis sin una política explícita. No se fija todavía un máximo de ganancia, una ventana de análisis, un umbral de actividad ni una pendiente máxima de curva: esos parámetros requieren pruebas y escucha.
 
-Los validadores son defensas de entrada, no sustituyen las pruebas del algoritmo ni garantizan por sí solos calidad sonora.
+Los validadores son defensas de entrada, no sustituyen las pruebas del algoritmo ni garantizan por sí solos calidad sonora. El analizador de ventanas opera offline sobre una vista PCM cuya memoria y longitud declara el llamador; no toca el hilo de audio ni realiza segmentación o decisiones musicales.
 
 ## 4. Pruebas iniciales
 
-tests/core/test_types.cpp contiene comprobaciones deterministas activas también en Release para formatos, rangos temporales, estados de captura, configuración de análisis, integridad de curvas y conversión de ganancia. La ejecución local terminó con 3/3 pruebas aprobadas. La captura solo se marca completa cuando coincide exactamente con la longitud esperada; una detención temprana nunca habilita conclusiones globales. Las comprobaciones usan una función de verificación propia, no assert, para seguir activas en Release.
+tests/core/test_types.cpp contiene comprobaciones deterministas activas también en Release para formatos, rangos temporales, estados de captura, configuración de análisis, integridad de curvas y conversión de ganancia. La ejecución local terminó con 4/4 pruebas aprobadas. La captura solo se marca completa cuando coincide exactamente con la longitud esperada; una detención temprana nunca habilita conclusiones globales. Los descriptores RMS/pico son mediciones básicas de la primera pasada, no una métrica final de sonoridad percibida ni un detector de voz. Las comprobaciones usan una función de verificación propia, no assert, para seguir activas en Release.
 
 ## 5. Próximas etapas
 
@@ -40,6 +41,6 @@ tests/core/test_types.cpp contiene comprobaciones deterministas activas también
 2. Ampliar pruebas de límites, overflow y datos inválidos.
 3. Ampliar fixtures PCM deterministas con envolventes, transitorios y señales proxy para segmentación y sonoridad.
 4. Integrar el acumulador con el ciclo de vida real del host, incluidos seek, loop, stop y cambios de región.
-5. Implementar la primera pasada de descriptores sin segmentación heurística prematura.
+5. Ampliar la primera pasada con descriptores espectrales/transitorios versionados y cobertura de discontinuidades.
 
 Los cinco jueces de PG Audio Intelligence permanecen fuera de este alcance y no se implementarán sin autorización explícita.
