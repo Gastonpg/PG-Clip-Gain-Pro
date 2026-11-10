@@ -32,7 +32,8 @@ CMake define 13 ejecutables de prueba:
 5. snapshot y cobertura (`pgclip_snapshot_tests`);
 6. estadísticas contextuales (`pgclip_context_tests`);
 7. cola SPSC y orden concurrente (20.000 bloques; `pgclip_spsc_queue_tests`);
-8. ensamblado de captura desde la cola (`pgclip_queued_capture_tests`);\n9. handshake atómico de ciclo de vida de captura (`pgclip_capture_session_tests`);
+8. ensamblado de captura desde la cola (`pgclip_queued_capture_tests`);
+9. handshake atómico de ciclo de vida de captura (`pgclip_capture_session_tests`);
 10. detector de actividad y abstención (`pgclip_activity_tests`);
 11. perfiles, referencia adaptativa y recomendaciones Clip Gain (`pgclip_clip_gain_tests`);
 12. preparación y aplicación de curvas estáticas (`pgclip_gain_curve_tests`);
