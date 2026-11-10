@@ -53,7 +53,7 @@ GainCurveRuntimeResult prepareGainCurveRuntime(
 
         const double linearGain = gainDbToLinear(point.gainDb);
         if (!std::isfinite(linearGain) || linearGain <= 0.0) {
-            result.runtime.points_.clear();
+            runtimePoints.clear();
             result.status = GainCurveRuntimeStatus::InvalidCurve;
             result.issue = {ValidationCode::NonFiniteGain,
                             "Gain curve conversion produced a non-finite linear value."};
