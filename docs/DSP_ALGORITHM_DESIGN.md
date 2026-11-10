@@ -100,7 +100,7 @@ Candidato de diseño:
 - comprobar consistencia entre grupos/secciones;
 - conservar contraste musical cuando esté respaldado por la estructura de la interpretación.
 
-La referencia no debe ser necesariamente la mediana de todas las frases si la grabación contiene secciones intencionalmente distintas. El juez de coherencia puede señalar agrupaciones, pero no debe inventar estructura.
+La referencia no debe ser necesariamente la mediana de todas las frases si la grabación contiene secciones intencionalmente distintas. El análisis compartido puede describir agrupaciones candidatas con evidencia estructural; cualquier evaluación futura debe respetar la incertidumbre y no inventar estructura.
 
 ## 6. Cálculo de Clip Gain
 
