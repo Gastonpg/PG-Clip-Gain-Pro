@@ -31,6 +31,7 @@ Plugin VST3 de edición vocal inteligente mediante curvas estáticas de Clip Gai
 14. [Flujo compartido de análisis en dos pasadas](docs/12_TWO_PASS_SHARED_ANALYSIS_PIPELINE.md)
 15. [Informe de revisión cruzada de la base](docs/13_CROSS_DOCUMENT_REVIEW_REPORT.md)
 16. [Base de implementación y contratos iniciales](docs/14_IMPLEMENTATION_FOUNDATION.md)
+17. [Compilación e instalación VST3 en Windows](docs/15_BUILDING_AND_INSTALLING_VST3.md)
 
 ## Motores
 
