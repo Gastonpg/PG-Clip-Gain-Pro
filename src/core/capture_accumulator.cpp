@@ -33,7 +33,6 @@ bool CaptureAccumulator::begin(FrameIndex sourceStartFrame,
     if (expectedFrameCount_ == 0U ||
         expectedFrameCount_ > std::numeric_limits<FrameIndex>::max() - sourceStartFrame) {
         state_ = CaptureState::Partial;
-        hasDiscontinuities_ = true;
         return false;
     }
 
