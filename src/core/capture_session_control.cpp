@@ -24,7 +24,7 @@ bool CaptureSessionControl::completeArm(bool workerPrepared) noexcept {
     return state_.compare_exchange_strong(
         expected,
         workerPrepared ? CaptureSessionState::Armed
-                       : CaptureSessionState::Rejected,
+                       : CaptureSessionState::Draining,
         std::memory_order_acq_rel,
         std::memory_order_acquire);
 }
