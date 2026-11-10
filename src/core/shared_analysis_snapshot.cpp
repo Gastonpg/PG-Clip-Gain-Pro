@@ -94,17 +94,41 @@ SnapshotBuildResult buildSharedAnalysisSnapshot(
         };
     }
 
-    FrameIndex previousStart = 0U;
-    FrameIndex previousEnd = 0U;
-    bool first = true;
+    const FrameIndex expectedWindowCount =
+        ((capture.totalFrames - 1U) / config.hopFrames) + 1U;
+    if (analysis.windows.size() !=
+        static_cast<std::size_t>(expectedWindowCount)) {
+        return {
+            SnapshotBuildStatus::CoverageMismatch,
+            {ValidationCode::RangeOutsideCapture,
+             "Window descriptor count does not match the configured hop and capture length."},
+            {}
+        };
+    }
 
-    for (const auto& window : analysis.windows) {
+    FrameIndex expectedStart = 0U;
+    for (std::size_t windowIndex = 0U;
+         windowIndex < analysis.windows.size(); ++windowIndex) {
+        const auto& window = analysis.windows[windowIndex];
+        if (expectedStart >= capture.totalFrames) {
+            return {
+                SnapshotBuildStatus::CoverageMismatch,
+                {ValidationCode::RangeOutsideCapture,
+                 "Window descriptors extend beyond the configured analysis grid."},
+                {}
+            };
+        }
+
+        const FrameIndex expectedLength =
+            std::min(config.windowFrames, capture.totalFrames - expectedStart);
+        const FrameIndex expectedEnd = expectedStart + expectedLength;
+
         if (const auto rangeIssue = validate(window.range, capture.totalFrames)) {
             return {SnapshotBuildStatus::CoverageMismatch, rangeIssue, {}};
         }
 
-        if ((!first && window.range.start <= previousStart) ||
-            (!first && window.range.start > previousEnd) ||
+        if (window.range.start != expectedStart ||
+            window.range.end != expectedEnd ||
             window.channels.size() !=
                 static_cast<std::size_t>(capture.format.channelCount)) {
             return {
@@ -141,9 +165,25 @@ SnapshotBuildResult buildSharedAnalysisSnapshot(
             }
         }
 
-        previousStart = window.range.start;
-        previousEnd = window.range.end;
-        first = false;
+        const FrameIndex remaining = capture.totalFrames - expectedStart;
+        if (windowIndex + 1U < analysis.windows.size()) {
+            if (config.hopFrames >= remaining) {
+                return {
+                    SnapshotBuildStatus::CoverageMismatch,
+                    {ValidationCode::RangeOutsideCapture,
+                     "Unexpected extra window after the final analysis position."},
+                    {}
+                };
+            }
+            expectedStart += config.hopFrames;
+        } else if (config.hopFrames < remaining) {
+            return {
+                SnapshotBuildStatus::CoverageMismatch,
+                {ValidationCode::RangeOutsideCapture,
+                 "Analysis grid ends before the captured region is fully covered."},
+                {}
+            };
+        }
     }
 
     auto snapshot = std::shared_ptr<const SharedAnalysisSnapshot>(
