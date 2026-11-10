@@ -2,7 +2,7 @@
 
 Plugin VST3 de edición vocal inteligente mediante curvas estáticas de Clip Gain. El objetivo es mejorar la consistencia de nivel sin borrar la interpretación ni recurrir a compresión, limitación o saturación.
 
-> Estado actual: núcleo C++17 y shell VST3 de compatibilidad transparente integrados. La versión anterior del núcleo pasó 6/6 suites localmente en Release y Debug con sanitizadores. Desde entonces se ampliaron descriptores/snapshots y se añadieron dos suites de colas/captura; las 8 suites del código actual deben revalidarse. El shell VST3 aún no tiene resultado de CI confirmado ni prueba en FL Studio. El módulo VST3 se compila y valida en CI para Windows/Linux; todavía no hay resultado remoto confirmado ni prueba en FL Studio. No están implementados aún la captura dentro del DAW, la GUI ni los motores DSP completos.
+> Estado actual: núcleo C++17 y shell VST3 de compatibilidad transparente integrados. La versión anterior del núcleo pasó 6/6 suites localmente en Release y Debug con sanitizadores. Desde entonces se ampliaron descriptores/snapshots y se añadieron tres suites nuevas: SPSC, ensamblado de captura y actividad por ventanas; las 9 suites del código actual deben revalidarse. El shell VST3 está configurado para compilarse y pasar el Validator de Steinberg en CI para Windows x64 y Linux x64, pero todavía no hay resultado remoto confirmado ni prueba en FL Studio. No están implementados aún la captura dentro del DAW, la GUI ni los motores DSP completos.
 
 ## Filosofía del producto
 
