@@ -45,6 +45,17 @@ int main() {
                   "calculate RMS over a four-cycle sine window");
             check(std::abs(result.windows[0].channels[0].peak - 0.5) < 1.0e-6,
                   "calculate sample peak");
+            check(std::abs(result.windows[0].channels[0].meanAbsolute -
+                           0.31831) < 0.002,
+                  "calculate mean absolute amplitude");
+            check(std::abs(result.windows[0].channels[0].dcOffset) < 1.0e-6,
+                  "calculate DC offset");
+            check(result.windows[0].channels[0].zeroCrossingRate > 0.02 &&
+                      result.windows[0].channels[0].zeroCrossingRate < 0.04,
+                  "calculate normalized zero-crossing rate");
+            check(std::abs(result.windows[0].channels[0].crestFactor -
+                           1.414213) < 0.002,
+                  "calculate crest factor");
         }
     }
 
@@ -56,7 +67,9 @@ int main() {
             AnalysisConfig{128U, 128U, 1U});
         check(result.windows.size() == 3U, "cover all silence frames");
         check(result.windows[0].channels[0].silent &&
-                  result.windows[0].channels[0].rms == 0.0,
+                  result.windows[0].channels[0].rms == 0.0 &&
+                  result.windows[0].channels[0].meanAbsolute == 0.0 &&
+                  result.windows[0].channels[0].zeroCrossingRate == 0.0,
               "classify digital silence without a fake loudness floor");
     }
 
@@ -84,8 +97,10 @@ int main() {
                         invalidSamples.data()},
         AnalysisConfig{64U, 64U, 1U});
     check(invalid.windows.size() == 1U &&
-              !invalid.windows[0].channels[0].finite,
-          "mark windows containing non-finite samples invalid");
+              !invalid.windows[0].channels[0].finite &&
+              invalid.windows[0].channels[0].meanAbsolute == 0.0 &&
+              invalid.windows[0].channels[0].crestFactor == 0.0,
+          "mark windows containing non-finite samples invalid without partial metrics");
 
     const auto badConfig = analyzeWindowDescriptors(
         AudioBufferView{AudioFormat{48000U, 1U}, 64U,
