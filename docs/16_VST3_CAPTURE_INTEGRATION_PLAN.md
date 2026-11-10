@@ -23,16 +23,18 @@ El módulo host-independiente `CaptureSessionControl` implementa el primer coord
 1. `Disarmed`: ruta transparente.
 2. `ArmRequested`: el worker prepara cola y ensamblador.
 3. `Armed`: solo ahora `shouldCapture()` permite encolar.
-4. `StopRequested`: se bloquea el inicio de nuevos bloques.
+4. `StopRequested`: se bloquea el inicio de nuevos bloques y se espera la quiescencia.
 5. `CancelRequested`: cancelación pendiente de quiescencia.
-6. `Draining`: el productor está quiescente; el worker puede vaciar y validar.
-7. `Captured`: el worker confirmó captura completa y válida.
-8. `Rejected`: preparación fallida, overflow o discontinuidad.
-9. `Cancelled`: cancelación confirmada tras detener al productor.
+6. `RejectRequested`: fallo activo; se bloquea la captura, pero aún no se permite reutilizar recursos.
+7. `Draining`: productor quiescente (o preparación fallida sin productor); el worker limpia, vacía y valida.
+8. `CancelDraining`: productor quiescente; el worker termina la limpieza de cancelación.
+9. `Captured`: el worker confirmó captura completa y válida.
+10. `Rejected`: el worker terminó la limpieza de una preparación fallida o captura inválida.
+11. `Cancelled`: el worker confirmó la limpieza de una cancelación.
 
 El callback será el único productor de la SPSC; el worker, el único consumidor. El coordinador solo intercambia estados atómicos: no posee audio, no llama al acumulador y no crea hilos. Los fallos y cancelaciones tampoco publican un estado terminal reutilizable hasta que el productor quedó quiescente y el worker terminó de limpiar la sesión. La suite independiente está registrada, pero todavía no fue ejecutada.
 
-El armado requiere que el worker prepare el ensamblador antes de publicar `Armed`. Al detener o cancelar, el consumidor no debe finalizar ni liberar recursos hasta que el host garantice que el callback dejó de ejecutarse y no puede iniciar otra operación de producción. Ese punto de quiescencia es un contrato externo que la integración VST3 aún debe resolver; el coordinador no lo simula ni lo presume.
+Si la preparación falla antes de publicar `Armed`, `completeArm(false)` pasa directamente a `Draining`: nunca hubo productor activo, pero el worker todavía debe limpiar los recursos parciales antes de publicar `Rejected`. El armado correcto requiere que el worker prepare el ensamblador antes de publicar `Armed`. Al detener o cancelar, el consumidor no debe finalizar ni liberar recursos hasta que el host garantice que el callback dejó de ejecutarse y no puede iniciar otra operación de producción. Ese punto de quiescencia es un contrato externo que la integración VST3 aún debe resolver; el coordinador no lo simula ni lo presume.
 
 ## 4. Reglas del callback de audio
 
