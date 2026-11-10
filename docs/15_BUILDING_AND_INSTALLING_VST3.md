@@ -1,17 +1,17 @@
 # PG Clip Gain Pro — Compilación e instalación VST3 en Windows
 
-**Objetivo de primera entrega:** FL Studio de 64 bits en Windows 10/11 x64.
+**Objetivo de primera entrega:** FL Studio 2026 de 64 bits en Windows x64. Se replica el método de entrega que ya funcionó con PG Vocal Leveler Balanced: compilar en GitHub Actions, descargar el artefacto ZIP, extraer el bundle VST3 completo en la carpeta común y reiniciar FL Studio para que vuelva a escanear. No hace falta compilar en la PC del usuario ni instalar Visual Studio.
 
 ## 1. Obtener el paquete
 
-La CI debe terminar correctamente en `windows-latest`, incluyendo:
+La CI debe terminar correctamente en `windows-latest` x64, incluyendo:
 - compilación C++17 del núcleo;
 - compilación del bundle VST3 x64;
 - ejecución del Validator oficial de Steinberg durante el post-build;
 - generación de `moduleinfo.json`;
 - siete suites de pruebas del núcleo.
 
-El artefacto de Windows se publica con el nombre `PG-Clip-Gain-Pro-VST3-windows-latest`. No instalar un artefacto de una ejecución fallida o sin el Validator aprobado.
+El artefacto de Windows se publica con el nombre `PG-Clip-Gain-Pro-VST3-windows-latest`; GitHub Actions lo entrega como ZIP descargable. No instalar un artefacto de una ejecución fallida o sin el Validator aprobado.
 
 ## 2. Instalar
 
@@ -21,8 +21,8 @@ El artefacto de Windows se publica con el nombre `PG-Clip-Gain-Pro-VST3-windows-
 
    `C:\Program Files\Common Files\VST3\`
 
-4. Cerrar y volver a abrir FL Studio.
-5. Abrir el administrador de plugins de FL Studio y ejecutar una búsqueda de plugins.
+4. Cerrar y volver a abrir FL Studio 2026.
+5. Abrir el administrador de plugins de FL Studio y ejecutar una búsqueda de plugins (rescan).
 6. Comprobar que aparece `PG Clip Gain Pro` en la categoría de efectos.
 
 No renombrar la carpeta ni extraer únicamente el archivo binario interno: la estructura del bundle contiene metadatos necesarios.
