@@ -4,7 +4,7 @@
 
 namespace pgclip {
 
-ValidationIssue validate(const AudioFormat& format) noexcept {
+ValidationIssue validate(const AudioFormat& format) {
     if (format.sampleRate < 8000U || format.sampleRate > 384000U) {
         return {ValidationCode::InvalidSampleRate,
                 "Sample rate must be between 8000 and 384000 Hz."};
@@ -19,7 +19,7 @@ ValidationIssue validate(const AudioFormat& format) noexcept {
 }
 
 ValidationIssue validate(const FrameRange& range,
-                         FrameIndex totalFrames) noexcept {
+                         FrameIndex totalFrames) {
     if (range.start >= range.end) {
         return {ValidationCode::EmptyRange,
                 "Frame ranges are start-inclusive and end-exclusive; start must be less than end."};
@@ -33,7 +33,7 @@ ValidationIssue validate(const FrameRange& range,
     return {};
 }
 
-ValidationIssue validate(const CaptureDescriptor& capture) noexcept {
+ValidationIssue validate(const CaptureDescriptor& capture) {
     if (const auto formatIssue = validate(capture.format)) {
         return formatIssue;
     }
@@ -60,7 +60,7 @@ ValidationIssue validate(const CaptureDescriptor& capture) noexcept {
     return {};
 }
 
-ValidationIssue validate(const AnalysisConfig& config) noexcept {
+ValidationIssue validate(const AnalysisConfig& config) {
     if (config.windowFrames == 0U) {
         return {ValidationCode::InvalidWindow,
                 "Analysis window length must be greater than zero."};
@@ -80,7 +80,7 @@ ValidationIssue validate(const AnalysisConfig& config) noexcept {
     return {};
 }
 
-ValidationIssue validate(const GainCurve& curve) noexcept {
+ValidationIssue validate(const GainCurve& curve) {
     for (std::size_t index = 0; index < curve.points.size(); ++index) {
         const auto& point = curve.points[index];
 
@@ -108,10 +108,6 @@ ValidationIssue validate(const GainCurve& curve) noexcept {
 }
 
 double gainDbToLinear(double gainDb) noexcept {
-    if (!std::isfinite(gainDb)) {
-        return 0.0;
-    }
-
     return std::pow(10.0, gainDb / 20.0);
 }
 
