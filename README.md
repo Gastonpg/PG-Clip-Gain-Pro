@@ -45,6 +45,6 @@ Detecta anomalías locales respecto del contexto y propone atenuaciones puntuale
 
 ## Estado y próximos pasos
 
-La documentación define la arquitectura y el protocolo para resolver parámetros mediante pruebas. La base host-independiente tiene 13 suites configuradas, todavía pendientes de una ejecución completa confirmada. La siguiente fase es implementar el handshake seguro de captura VST3, conectar cola y worker, y validar el ciclo de transporte antes de aplicar curvas. La interfaz gráfica sigue postergada hasta validar el comportamiento DSP.
+La documentación define la arquitectura y el protocolo para resolver parámetros mediante pruebas. La base host-independiente tiene 14 suites configuradas, todavía pendientes de una ejecución completa confirmada. El coordinador de ciclo de captura y el adaptador realtime-safe que divide bloques planares del host en slots acotados ya están implementados con suites configuradas; todavía no se han compilado ni ejecutado. La siguiente fase es conectar estos módulos al callback VST3 y al worker, y validar el ciclo de transporte antes de aplicar curvas. La interfaz gráfica sigue postergada hasta validar el comportamiento DSP.
 
 Los cinco jueces de PG Audio Intelligence son una fase posterior y separada; no se integrarán sin autorización explícita del usuario.
