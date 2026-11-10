@@ -3,6 +3,7 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 
 namespace {
 int failures = 0;
@@ -19,6 +20,16 @@ int main() {
     using namespace pgclip;
 
     const AudioFormat format{48000U, 2U};
+    bool invalidFormatRejected = false;
+    try {
+        QueuedCaptureAssembler invalidFormat(
+            AudioFormat{48000U, 0U}, 8U, 4U);
+    } catch (const std::invalid_argument&) {
+        invalidFormatRejected = true;
+    }
+    check(invalidFormatRejected,
+          "reject zero-channel capture format without dividing by zero");
+
     SpscAudioBlockQueue queue(4U, 4U, 2U);
     QueuedCaptureAssembler assembler(format, 8U, 4U);
 
@@ -62,6 +73,16 @@ int main() {
           "assemble interleaved samples in original frame order");
     check(assembler.drainOne(queue) == QueueDrainStatus::CaptureRejected,
           "do not consume more blocks after capture completes");
+
+    SpscAudioBlockQueue staleQueue(4U, 4U, 2U);
+    QueuedCaptureAssembler staleAssembler(format, 8U, 4U);
+    check(staleQueue.tryPush(AudioBlockView{
+              channelsA.data(), 50U, 2U, 2U,
+              AudioSampleFormat::Float32, 0U
+          }) == AudioQueueResult::Success,
+          "prepare stale queue content");
+    check(!staleAssembler.begin(staleQueue, 100U, 2U),
+          "refuse to start a new capture while stale blocks remain queued");
 
     SpscAudioBlockQueue gapQueue(4U, 4U, 2U);
     QueuedCaptureAssembler gapAssembler(format, 8U, 4U);
