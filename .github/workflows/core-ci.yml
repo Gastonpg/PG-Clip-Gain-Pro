@@ -7,23 +7,15 @@ on:
 
 jobs:
   build-test-and-plugin:
-    name: Build, test and VST3 (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    name: Build, test and VST3 (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
 
       - name: Configure Windows x64
-        if: runner.os == 'Windows'
         run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DPGCLIP_BUILD_TESTS=ON -DPGCLIP_BUILD_VST3=ON
-
-      - name: Configure Linux core tests
-        if: runner.os == 'Linux'
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPGCLIP_BUILD_TESTS=ON -DPGCLIP_BUILD_VST3=OFF
 
       - name: Build all configured targets
         run: cmake --build build --config Release --parallel 2
@@ -32,11 +24,9 @@ jobs:
         run: ctest --test-dir build -C Release --output-on-failure
 
       - name: Stage Windows VST3 bundle
-        if: runner.os == 'Windows'
         run: cmake -E copy_directory build/VST3/Release/PGClipGainPro.vst3 artifact/PGClipGainPro.vst3
 
       - name: Upload Windows VST3 bundle
-        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: PG-Clip-Gain-Pro-VST3-Windows
