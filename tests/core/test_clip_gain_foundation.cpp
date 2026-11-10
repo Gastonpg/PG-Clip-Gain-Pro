@@ -154,6 +154,24 @@ int main() {
                           "validate ordered curve points and relative phrase gains");
                 }
 
+                const std::vector<PhraseGainRecommendation> shortAdjacent{
+                    PhraseGainRecommendation{
+                        FrameRange{0U, 2U}, 2.0, 1.0,
+                        GainRecommendationAction::Adjust
+                    },
+                    PhraseGainRecommendation{
+                        FrameRange{2U, 4U}, -1.0, 1.0,
+                        GainRecommendationAction::Adjust
+                    }
+                };
+                const auto shortCurve = buildClipGainCurve(
+                    shortAdjacent, 4U, ClipGainCurveConfig{120U, 120U});
+                check(shortCurve.status == ClipGainCurveStatus::Ready &&
+                          shortCurve.curve.points.size() == 5U &&
+                          shortCurve.curve.points[2U].frame == 2U &&
+                          shortCurve.curve.points[2U].gainDb == 0.0,
+                      "handle two-frame phrases and deduplicate contiguous zero-gain boundary");
+
                 auto overlappingRecommendations = recommendations.recommendations;
                 overlappingRecommendations[2U].range.start = 3800U;
                 const auto overlapCurve = buildClipGainCurve(
