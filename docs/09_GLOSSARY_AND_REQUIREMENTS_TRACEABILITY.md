@@ -32,7 +32,11 @@
 | PG-010 | No asumir acceso directo al archivo fuente desde VST3 | 07 | Prueba en hosts y flujo de captura |
 | PG-011 | Análisis eficiente en hardware modesto | 06, 07 | Perfil de CPU y memoria |
 | PG-012 | Resultados reproducibles y versionados | 05, 06, 07 | Repetición con mismos datos y parámetros |
-| PG-013 | Waveform y edición gráfica se implementan después de validar DSP | 08 | Puerta de fase y revisión de arquitectura |\n| PG-014 | Todos los módulos comparten unidades, intervalos y estados numéricos inequívocos | 10 | Pruebas de dominio temporal, canales, valores especiales y curvas |\n| PG-015 | El banco sintético es determinista y reproducible | 11 | Ejecución repetida de fixtures con semillas y configuraciones fijas |\n| PG-016 | Capturas parciales o discontinuas no habilitan conclusiones globales no justificadas | 07, 10, 11 | Fixtures CAP-002 a CAP-006 y verificación de estado de cobertura |\n| PG-017 | La descripción base y el refinamiento contextual son pasadas separadas y reproducibles | 12 | Pruebas de salida por pasada, determinismo y equivalencia entre tamaños de bloque |
+| PG-013 | Waveform y edición gráfica se implementan después de validar DSP | 08 | Puerta de fase y revisión de arquitectura | 
+| PG-014 | Todos los módulos comparten unidades, intervalos y estados numéricos inequívocos | 10 | Pruebas de dominio temporal, canales, valores especiales y curvas | 
+| PG-015 | El banco sintético es determinista y reproducible | 11 | Ejecución repetida de fixtures con semillas y configuraciones fijas | 
+| PG-016 | Capturas parciales o discontinuas no habilitan conclusiones globales no justificadas | 07, 10, 11 | Fixtures CAP-002 a CAP-006 y verificación de estado de cobertura | 
+| PG-017 | La descripción base y el refinamiento contextual son pasadas separadas y reproducibles | 12 | Pruebas de salida por pasada, determinismo y equivalencia entre tamaños de bloque |
 
 ## 3. Convenciones de unidades
 
