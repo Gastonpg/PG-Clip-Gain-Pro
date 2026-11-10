@@ -77,7 +77,7 @@ Clip Gain y Clip Peak conservan curvas separadas. No sumar ni fusionar automáti
 1. Confirmar los puntos seguros de inicialización/finalización del procesador (el contrato de `projectTimeSamples` ya fue inspeccionado).
 2. Ejecutar la suite del coordinador atómico y completar pruebas de concurrencia y transiciones.
 3. Resolver el punto de quiescencia real del callback en el ciclo de vida VST3.
-4. Probar handshake, overflow, huecos, solapamientos, seek y cancelación con productor/consumidor concurrentes.
+4. Probar el adaptador planar con bloques mayores que el slot, posiciones contiguas, mono/estéreo, float32/float64, silencios y cola llena; una inserción parcial invalida la captura. Probar además handshake, overflow, huecos, solapamientos, seek y cancelación con productor/consumidor concurrentes.
 5. Integrar el callback como productor, sin worker todavía, y verificar passthrough bit-exacto en float32/float64.
 6. Integrar el worker con cierre y cancelación deterministas.
 7. Ejecutar CI en Windows/Linux y Validator solo después de revisión estática completa.
@@ -90,7 +90,7 @@ Clip Gain y Clip Peak conservan curvas separadas. No sumar ni fusionar automáti
 - No existe aún interfaz propia para armar/desarmar; el controlador actual solo serializa estado.
 - El coordinador atómico existe, pero no está conectado al callback ni a un worker real.
 - El rechazo de una sesión no equivale a que el callback haya quedado quiescente: la integración debe esperar la garantía del host antes de drenar o liberar buffers. Los estados `RejectRequested` y `CancelDraining` impiden rearmar mientras esa limpieza siga pendiente; un fallo durante la preparación pasa también por `Draining`.
-- No hay límite de memoria de captura elegido y probado con duraciones reales.
+- El adaptador planar de división en subbloques está implementado y tiene una suite configurada, pero todavía no fue compilado ni ejecutado. No hay límite de memoria de captura elegido y probado con duraciones reales.
 - No hay política implementada para captura cancelada, stop del host y restauración de sesión.
 
 **Criterio de salida:** ninguna captura se presenta como completa salvo que el productor haya terminado, la cola esté drenada, no haya bloques descartados, la secuencia de posiciones sea contigua y el acumulador confirme cobertura válida.
