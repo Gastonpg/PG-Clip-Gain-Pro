@@ -94,7 +94,7 @@ int main() {
         GainPoint{0U, 0.0}, GainPoint{11U, 3.0}
     }};
     check(combineStaticGainCurves(
-              outsideCurve, emptyCurve, 10U,
+              outsideCurve, GainCurve{}, 10U,
               CurveCombinationConfig{6.0, 6.0}).status ==
               CurveCombinationStatus::InvalidInputCurve,
           "reject combined curve points outside the capture timeline");
