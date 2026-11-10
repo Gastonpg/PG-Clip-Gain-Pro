@@ -18,17 +18,21 @@ No se inferirá que se capturó el clip entero si el usuario comenzó tarde, hub
 
 ## 3. Máquina de estados y propiedad de datos
 
-Estados conceptuales:
-1. `Disarmed`: el callback solo procesa audio transparente.
-2. `ArmRequested`: el worker prepara el acumulador y confirma que la cola está vacía; el callback todavía no encola.
-3. `Armed`: el callback fija el primer sample position válido y comienza a encolar bloques.
-4. `StopRequested`: el callback deja de encolar; el worker drena todos los bloques pendientes.
-5. `Captured`: captura contigua finalizada; el worker puede analizar.
-6. `Rejected`: overflow, discontinuidad, formato no soportado o cobertura inválida; no se publican curvas.
+El módulo host-independiente `CaptureSessionControl` implementa el primer coordinador atómico de ciclo de vida. Sus estados son:
 
-El callback es el único productor de la SPSC; el worker es el único consumidor. El worker es propietario del ensamblador, del acumulador y de los buffers de análisis. La UI/control comunica órdenes mediante estado atómico o una cola de comandos acotada; nunca llama directamente a métodos del acumulador mientras el worker los utiliza.
+1. `Disarmed`: ruta transparente.
+2. `ArmRequested`: el worker prepara cola y ensamblador.
+3. `Armed`: solo ahora `shouldCapture()` permite encolar.
+4. `StopRequested`: se bloquea el inicio de nuevos bloques.
+5. `CancelRequested`: cancelación pendiente de quiescencia.
+6. `Draining`: el productor está quiescente; el worker puede vaciar y validar.
+7. `Captured`: el worker confirmó captura completa y válida.
+8. `Rejected`: preparación fallida, overflow o discontinuidad.
+9. `Cancelled`: cancelación confirmada tras detener al productor.
 
-El armado requiere un handshake: el worker prepara el ensamblador mientras la producción está detenida; solo después publica `Armed`. El callback no debe encolar antes de esa confirmación. Al detener, el callback deja de producir antes de que el worker finalice el ensamblador.
+El callback será el único productor de la SPSC; el worker, el único consumidor. El coordinador solo intercambia estados atómicos: no posee audio, no llama al acumulador y no crea hilos. La suite independiente está registrada, pero todavía no fue ejecutada.
+
+El armado requiere que el worker prepare el ensamblador antes de publicar `Armed`. Al detener o cancelar, el consumidor no debe finalizar ni liberar recursos hasta que el host garantice que el callback dejó de ejecutarse y no puede iniciar otra operación de producción. Ese punto de quiescencia es un contrato externo que la integración VST3 aún debe resolver; el coordinador no lo simula ni lo presume.
 
 ## 4. Reglas del callback de audio
 
@@ -68,14 +72,15 @@ Clip Gain y Clip Peak conservan curvas separadas. No sumar ni fusionar automáti
 
 ## 8. Secuencia de implementación y puertas
 
-1. Confirmar en el SDK fijado los flags y campos exactos de `ProcessContext`, y los puntos seguros de inicialización/finalización del procesador. (Contrato de `projectTimeSamples` ya inspeccionado.)\n2. Integrar y probar el coordinador atómico de estados; suite independiente agregada, pendiente de ejecución.
-2. Implementar y probar la máquina de estados independiente del SDK.
-3. Probar handshake de armado/detención, overflow, huecos, solapamientos, seek y cancelación con productor/consumidor concurrentes.
-4. Integrar el callback como productor, sin worker todavía, y verificar passthrough bit-exacto en float32/float64.
-5. Integrar el worker con cierre y cancelación deterministas.
-6. Ejecutar CI en Windows/Linux y Validator solo después de revisión estática completa.
-7. Instalar en FL Studio y probar reproducción, stop, seek, loop, mono/estéreo, varias instancias y cierre del proyecto.
-8. Solo entonces habilitar análisis y curvas; hasta ese momento el plugin debe seguir siendo transparente.
+1. Confirmar los puntos seguros de inicialización/finalización del procesador (el contrato de `projectTimeSamples` ya fue inspeccionado).
+2. Ejecutar la suite del coordinador atómico y completar pruebas de concurrencia y transiciones.
+3. Resolver el punto de quiescencia real del callback en el ciclo de vida VST3.
+4. Probar handshake, overflow, huecos, solapamientos, seek y cancelación con productor/consumidor concurrentes.
+5. Integrar el callback como productor, sin worker todavía, y verificar passthrough bit-exacto en float32/float64.
+6. Integrar el worker con cierre y cancelación deterministas.
+7. Ejecutar CI en Windows/Linux y Validator solo después de revisión estática completa.
+8. Instalar en FL Studio y probar reproducción, stop, seek, loop, mono/estéreo, varias instancias y cierre del proyecto.
+9. Solo entonces habilitar análisis y curvas; hasta ese momento el plugin debe seguir siendo transparente.
 
 ## 9. Riesgos que bloquean la integración
 
