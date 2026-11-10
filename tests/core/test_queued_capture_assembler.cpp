@@ -101,6 +101,41 @@ int main() {
     check(partialAssembler.descriptor().state == CaptureState::Partial,
           "finish incomplete region as partial, never complete");
 
+    SpscAudioBlockQueue undersizedQueue(4U, 4U, 2U);
+    QueuedCaptureAssembler undersizedAssembler(format, 8U, 2U);
+    check(undersizedAssembler.begin(400U, 4U),
+          "begin capture with deliberately undersized worker scratch");
+    const std::array<float, 4> longLeft{0.1F, 0.2F, 0.3F, 0.4F};
+    const std::array<float, 4> longRight{0.5F, 0.6F, 0.7F, 0.8F};
+    const std::array<const void*, 2> longChannels{
+        longLeft.data(), longRight.data()
+    };
+    check(undersizedQueue.tryPush(AudioBlockView{
+              longChannels.data(), 400U, 4U, 2U,
+              AudioSampleFormat::Float32, 0U
+          }) == AudioQueueResult::Success,
+          "enqueue block larger than worker scratch");
+    check(undersizedAssembler.drainOne(undersizedQueue) ==
+              QueueDrainStatus::QueueError,
+          "report queue destination mismatch");
+    check(undersizedAssembler.descriptor().state == CaptureState::Partial,
+          "do not leave capture active after worker queue error");
+
+    SpscAudioBlockQueue wrongChannelQueue(4U, 4U, 2U);
+    QueuedCaptureAssembler wrongChannelAssembler(format, 8U, 4U);
+    check(wrongChannelAssembler.begin(500U, 2U),
+          "begin wrong-channel capture fixture");
+    const std::array<const void*, 1> monoChannel{leftA.data()};
+    check(wrongChannelQueue.tryPush(AudioBlockView{
+              monoChannel.data(), 500U, 2U, 1U,
+              AudioSampleFormat::Float32, 0U
+          }) == AudioQueueResult::Success,
+          "enqueue mismatched channel layout");
+    check(wrongChannelAssembler.drainOne(wrongChannelQueue) ==
+              QueueDrainStatus::CaptureRejected &&
+              wrongChannelAssembler.descriptor().state == CaptureState::Cancelled,
+          "cancel capture when queued channel layout does not match");
+
     if (failures != 0) {
         std::cerr << failures << " queued capture test(s) failed.\n";
         return 1;
