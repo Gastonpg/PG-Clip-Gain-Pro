@@ -96,6 +96,16 @@ int main() {
         check(tailReviewed,
               "protect phrase-tail transient for manual review");
 
+        const auto peakCurve = buildClipPeakCurve(
+            result.events,
+            static_cast<FrameIndex>(vocal.size()),
+            ClipPeakCurveConfig{120U, 120U});
+        check(peakCurve.status == ClipPeakCurveStatus::Ready &&
+                  peakCurve.curve.points.size() == 4U &&
+                  peakCurve.curve.points[1U].frame == 5U * 480U + 120U &&
+                  peakCurve.curve.points[1U].gainDb < 0.0,
+              "build an independent static attenuation curve only for interior anomalies");
+
         const auto invalidConfig = detectClipPeakEvents(
             *snapshot.snapshot, activity, ClipPeakConfig{});
         check(invalidConfig.status == ClipPeakStatus::InvalidConfiguration,
