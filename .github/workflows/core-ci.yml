@@ -36,10 +36,13 @@ jobs:
       - name: Run core tests
         run: ctest --test-dir build -C Release --output-on-failure
 
+      - name: Stage VST3 bundle
+        run: cmake -E copy_directory build/Release/PGClipGainPro.vst3 artifact/PGClipGainPro.vst3
+
       - name: Upload VST3 bundle
         uses: actions/upload-artifact@v4
         with:
           name: PG-Clip-Gain-Pro-VST3-${{ matrix.os }}
-          path: build/**/*.vst3
+          path: artifact/PGClipGainPro.vst3
           if-no-files-found: error
           retention-days: 14
