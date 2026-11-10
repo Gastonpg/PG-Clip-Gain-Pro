@@ -30,6 +30,7 @@ Plugin VST3 de edición vocal inteligente mediante curvas estáticas de Clip Gai
 13. [Fixtures sintéticos y criterios de aceptación](docs/11_SYNTHETIC_FIXTURES_AND_ACCEPTANCE_CRITERIA.md)
 14. [Flujo compartido de análisis en dos pasadas](docs/12_TWO_PASS_SHARED_ANALYSIS_PIPELINE.md)
 15. [Informe de revisión cruzada de la base](docs/13_CROSS_DOCUMENT_REVIEW_REPORT.md)
+16. [Base de implementación y contratos iniciales](docs/14_IMPLEMENTATION_FOUNDATION.md)
 
 ## Motores
 
@@ -41,6 +42,6 @@ Detecta anomalías locales respecto del contexto y propone atenuaciones puntuale
 
 ## Estado y próximos pasos
 
-La documentación define la arquitectura y el protocolo para resolver parámetros mediante pruebas. La siguiente fase es revisar la consistencia de la especificación y luego implementar el núcleo DSP incrementalmente, empezando por análisis y segmentación sin interfaz gráfica.
+La documentación define la arquitectura y el protocolo para resolver parámetros mediante pruebas. La siguiente fase es validar el esqueleto C++17 con compilación automatizada y ampliar el banco de pruebas; después se implementarán captura y análisis compartido en dos pasadas, sin interfaz gráfica.
 
 Los cinco jueces de PG Audio Intelligence son una fase posterior y separada; no se integrarán sin autorización explícita del usuario.
