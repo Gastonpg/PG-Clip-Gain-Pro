@@ -14,6 +14,7 @@
 - Snapshot compartido inmutable con comprobación de formato, configuración y cobertura.
 - Estadísticas contextuales descriptivas con mediana, MAD y rangos.
 - Cola SPSC acotada y preasignada para transferir bloques de audio del callback al worker: índices atómicos de 64 bits, sin locks ni asignaciones en push/pop, soporte de entrada float32/float64 (copia de análisis float32), flags de silencio, metadatos temporales y contador de bloques descartados por saturación.
+- Ensamblador del lado del worker que consume la cola, reconstruye audio intercalado, verifica continuidad temporal y distingue captura completa, parcial, cancelada o discontinua. Requiere que el llamador vacíe la cola antes de iniciar una sesión nueva.
 - Las seis suites originales fueron aprobadas localmente en Release y Debug con AddressSanitizer y UndefinedBehaviorSanitizer. Se agregaron dos suites: estrés SPSC con 20.000 bloques y ensamblado de captura desde la cola; además se ampliaron las pruebas existentes de descriptores y snapshots. Los cambios nuevos quedan pendientes de ejecución en CI.
 
 ## 2. Primera integración VST3
@@ -52,7 +53,7 @@ Un resultado verde de CI no reemplaza la prueba manual dentro de FL Studio.
 ## 5. Límites actuales
 
 - El VST3 aún no tiene interfaz gráfica.
-- La cola SPSC ya está implementada y probada por diseño unitario, pero todavía no está conectada al callback real del VST3 ni a un worker de análisis.
+- La cola SPSC y el ensamblador de captura están implementados como módulos host-independientes, pero todavía no están conectados al callback real del VST3 ni a un hilo worker de análisis.
 - No captura una región completa del DAW.
 - No integra todavía una cola SPSC ni coordinación callback/worker.
 - No implementa la segunda pasada contextual ni segmentación vocal.
