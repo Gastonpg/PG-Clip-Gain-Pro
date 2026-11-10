@@ -28,7 +28,7 @@
 - Sin asignaciones, análisis, bloqueos ni operaciones de disco en el callback de procesamiento.
 - El SDK Validator y la generación de `moduleinfo.json` quedan activados en la configuración de CMake.
 
-Se incluye el aviso MIT oficial del SDK en `third_party/licenses/STEINBERG_VST3_SDK_LICENSE.txt` para acompañar las distribuciones que incorporen el código enlazado.
+Se incluyen los avisos de distribución utilizados por la integración: licencia MIT oficial del SDK en `third_party/licenses/STEINBERG_VST3_SDK_LICENSE.txt` y aviso de la plantilla CMake de versión en `third_party/licenses/STEINBERG_CMAKE_PROJECTVERSION_TEMPLATE_NOTICE.txt`.
 
 Este shell demuestra la integración de API, factory, busses, tamaños de muestra, estado y ruta de procesamiento. No implementa todavía editor gráfico, parámetros de usuario, captura de análisis, curva de ganancia ni motores Clip Gain/Clip Peak.
 
