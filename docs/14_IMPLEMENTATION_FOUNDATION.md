@@ -56,7 +56,7 @@ Un resultado verde de CI no reemplaza la prueba manual dentro de FL Studio.
 - La cola SPSC y el ensamblador de captura están implementados como módulos host-independientes, pero todavía no están conectados al callback real del VST3 ni a un hilo worker de análisis.
 - No captura una región completa del DAW.
 - No hay todavía coordinación real entre el callback del VST3 y un hilo worker; la cola y el ensamblador solo están probados como módulos host-independientes.
-- No implementa la segunda pasada contextual ni segmentación vocal.
+- El detector de actividad por ventanas es solo una primera pasada candidata; no implementa todavía la segunda pasada contextual ni segmentación final de frases.
 - No implementa referencia adaptativa.
 - No implementa curvas Clip Gain ni Clip Peak.
 - No tiene todavía instalador ni paquete final de distribución.
