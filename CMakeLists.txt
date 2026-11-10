@@ -11,6 +11,7 @@ add_library(pgclip_core STATIC
     src/core/window_analysis.cpp
     src/core/shared_analysis_snapshot.cpp
     src/core/window_context.cpp
+    src/core/spsc_audio_block_queue.cpp
 )
 target_include_directories(pgclip_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -49,6 +50,11 @@ if(PGCLIP_BUILD_TESTS)
     add_executable(pgclip_context_tests tests/core/test_window_context.cpp)
     target_link_libraries(pgclip_context_tests PRIVATE pgclip_core)
     add_test(NAME pgclip_context_tests COMMAND pgclip_context_tests)
+
+    find_package(Threads REQUIRED)
+    add_executable(pgclip_spsc_queue_tests tests/core/test_spsc_audio_block_queue.cpp)
+    target_link_libraries(pgclip_spsc_queue_tests PRIVATE pgclip_core Threads::Threads)
+    add_test(NAME pgclip_spsc_queue_tests COMMAND pgclip_spsc_queue_tests)
 endif()
 
 if(PGCLIP_BUILD_VST3)
