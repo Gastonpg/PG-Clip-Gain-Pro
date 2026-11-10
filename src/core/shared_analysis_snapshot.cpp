@@ -1,5 +1,6 @@
 #include "pgclip/core/shared_analysis_snapshot.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <utility>
 
@@ -69,7 +70,10 @@ SnapshotBuildResult buildSharedAnalysisSnapshot(
         };
     }
 
-    if (analysis.windows.front().range.start != 0U ||
+    if (analysis.format.sampleRate != capture.format.sampleRate ||
+        analysis.format.channelCount != capture.format.channelCount ||
+        analysis.totalFrames != capture.totalFrames ||
+        analysis.windows.front().range.start != 0U ||
         analysis.windows.back().range.end != capture.totalFrames) {
         return {
             SnapshotBuildStatus::CoverageMismatch,
@@ -101,11 +105,22 @@ SnapshotBuildResult buildSharedAnalysisSnapshot(
         }
 
         for (const auto& channel : window.channels) {
-            if (!std::isfinite(channel.rms) ||
+            const bool invalidNumbers =
+                !std::isfinite(channel.rms) ||
                 !std::isfinite(channel.peak) ||
-                channel.rms < 0.0 || channel.peak < 0.0 ||
-                channel.rms > channel.peak ||
-                (channel.silent != (channel.peak == 0.0))) {
+                channel.rms < 0.0 || channel.peak < 0.0;
+            const bool inconsistentFiniteMetrics =
+                channel.finite &&
+                (channel.rms > channel.peak +
+                    1.0e-12 * std::max(1.0, channel.peak) ||
+                 channel.silent != (channel.peak == 0.0));
+            const bool inconsistentInvalidMetrics =
+                !channel.finite &&
+                (channel.rms != 0.0 || channel.peak != 0.0 ||
+                 channel.silent);
+
+            if (invalidNumbers || inconsistentFiniteMetrics ||
+                inconsistentInvalidMetrics) {
                 return {
                     SnapshotBuildStatus::InvalidDescriptor,
                     {ValidationCode::NonFiniteGain,
