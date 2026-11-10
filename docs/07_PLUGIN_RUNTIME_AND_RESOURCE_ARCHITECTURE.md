@@ -116,7 +116,7 @@ La implementación inicial contiene un acumulador C++ preasignado y acotado, ind
 
 Límites actuales:
 - todavía no está conectado al procesador VST3 ni a FL Studio;
-- no implementa todavía una cola SPSC entre callback y worker;
+- la cola SPSC acotada ya existe como módulo host-independiente, pero todavía no está conectada al callback VST3 ni al worker;
 - no resuelve por sí mismo seek, loop, stop, cambios de región ni render offline;
 - el acumulador no es thread-safe: el llamador debe serializar las operaciones y asegurar que el callback esté quiescente durante begin/finish/cancel;
 - el analizador de ventanas y las estadísticas contextuales funcionan offline sobre vistas PCM y snapshots ya construidos.
