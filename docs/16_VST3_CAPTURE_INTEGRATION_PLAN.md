@@ -68,7 +68,7 @@ Clip Gain y Clip Peak conservan curvas separadas. No sumar ni fusionar automáti
 
 ## 8. Secuencia de implementación y puertas
 
-1. Confirmar en el SDK fijado los flags y campos exactos de `ProcessContext`, y los puntos seguros de inicialización/finalización del procesador.
+1. Confirmar en el SDK fijado los flags y campos exactos de `ProcessContext`, y los puntos seguros de inicialización/finalización del procesador. (Contrato de `projectTimeSamples` ya inspeccionado.)\n2. Integrar y probar el coordinador atómico de estados; suite independiente agregada, pendiente de ejecución.
 2. Implementar y probar la máquina de estados independiente del SDK.
 3. Probar handshake de armado/detención, overflow, huecos, solapamientos, seek y cancelación con productor/consumidor concurrentes.
 4. Integrar el callback como productor, sin worker todavía, y verificar passthrough bit-exacto en float32/float64.
@@ -79,7 +79,7 @@ Clip Gain y Clip Peak conservan curvas separadas. No sumar ni fusionar automáti
 
 ## 9. Riesgos que bloquean la integración
 
-- Falta confirmar el flag VST3 exacto que valida `projectTimeSamples`.
+- El contrato de `projectTimeSamples` ya fue confirmado en el SDK fijado.
 - No existe aún interfaz propia para armar/desarmar; el controlador actual solo serializa estado.
 - No existe worker real ni handshake entre control, callback y consumidor.
 - No hay límite de memoria de captura elegido y probado con duraciones reales.
