@@ -15,6 +15,10 @@ struct AudioBufferView {
 struct ChannelWindowMetrics {
     double rms{0.0};
     double peak{0.0};
+    double meanAbsolute{0.0};
+    double dcOffset{0.0};
+    double zeroCrossingRate{0.0};
+    double crestFactor{0.0};
     bool finite{true};
     bool silent{true};
 };
