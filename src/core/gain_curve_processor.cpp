@@ -39,11 +39,12 @@ GainCurveRuntimeResult prepareGainCurveRuntime(
         return result;
     }
 
-    result.runtime.points_.reserve(curve.points.size());
+    std::vector<LinearGainPoint> runtimePoints;
+    runtimePoints.reserve(curve.points.size());
     for (const auto& point : curve.points) {
         if (point.gainDb > config.maximumBoostDb ||
             point.gainDb < -config.maximumCutDb) {
-            result.runtime.points_.clear();
+            runtimePoints.clear();
             result.status = GainCurveRuntimeStatus::InvalidCurve;
             result.issue = {ValidationCode::NonFiniteGain,
                             "Runtime curve exceeds the configured combined gain safety limits."};
@@ -58,9 +59,10 @@ GainCurveRuntimeResult prepareGainCurveRuntime(
                             "Gain curve conversion produced a non-finite linear value."};
             return result;
         }
-        result.runtime.points_.push_back({point.frame, linearGain});
+        runtimePoints.push_back({point.frame, linearGain});
     }
 
+    result.runtime = GainCurveRuntime(std::move(runtimePoints));
     result.status = GainCurveRuntimeStatus::Ready;
     return result;
 }
