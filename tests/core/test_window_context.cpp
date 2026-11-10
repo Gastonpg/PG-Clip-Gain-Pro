@@ -24,6 +24,7 @@ int main() {
     const AudioFormat mono{48000U, 1U};
     const AnalysisConfig config{128U, 128U, 1U};
     const auto sine = makeSine(mono, 512U, 750.0, 0.5);
+    check(sine.has_value(), "create context source sine");
     if (sine) {
         const auto analysis = analyzeWindowDescriptors(
             AudioBufferView{mono, sine->frameCount,
@@ -41,8 +42,9 @@ int main() {
             if (!context.channels.empty()) {
                 const auto& channel = context.channels[0];
                 check(channel.totalWindows == 4U &&
-                          channel.nonSilentWindows == 4U,
-                      "count all finite non-silent windows");
+                          channel.nonSilentWindows == 4U &&
+                          channel.finiteWindows + channel.invalidWindows == channel.totalWindows,
+                      "count all finite non-silent windows and invalid evidence");
                 check(channel.medianRms.has_value() &&
                           std::abs(*channel.medianRms - 0.353553) < 0.002,
                       "calculate median RMS descriptively");
@@ -58,6 +60,7 @@ int main() {
     }
 
     const auto silence = makeSilence(mono, 256U);
+    check(silence.has_value(), "create context silence fixture");
     if (silence) {
         const auto analysis = analyzeWindowDescriptors(
             AudioBufferView{mono, silence->frameCount,
