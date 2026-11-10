@@ -75,7 +75,7 @@ La CI está configurada, pero no hay resultado remoto confirmado todavía. Un bu
 - El perfil RMS es provisional; falta una métrica de sonoridad perceptual validada.
 - La referencia adaptativa es un prototipo; necesita calibración con voces reales.
 - Las recomendaciones Clip Gain aún no generan ni aplican curvas finales.
-- Clip Peak ya tiene un detector candidato independiente, pero todavía no genera ni aplica curvas de atenuación finales.
+- Clip Peak ya genera eventos y curvas de atenuación estática candidatas; todavía no están integradas al VST3 ni se aplican al audio.
 - No hay persistencia de curvas, edición manual, instalador ni paquete final de producto.
 
 ## 6. Próximas etapas
