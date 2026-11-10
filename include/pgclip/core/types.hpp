@@ -25,6 +25,7 @@ enum class ValidationCode {
     RangeOutsideCapture,
     InvalidWindow,
     InvalidHop,
+    InvalidVersion,
     NonFiniteGain,
     UnorderedCurvePoints,
     DuplicateCurvePoint
