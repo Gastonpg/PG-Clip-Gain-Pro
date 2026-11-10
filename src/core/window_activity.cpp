@@ -84,12 +84,14 @@ ActivityDetectionResult detectWindowActivity(
         destination.range = sourceWindow.range;
 
         bool hasFiniteChannel = false;
+        bool hasInvalidChannel = false;
         bool hasNonSilentChannel = false;
         double representativeRms = 0.0;
 
         for (std::size_t channel = 0U; channel < channelCount; ++channel) {
             const auto& metrics = sourceWindow.channels[channel];
             if (!metrics.finite) {
+                hasInvalidChannel = true;
                 continue;
             }
 
@@ -107,6 +109,12 @@ ActivityDetectionResult detectWindowActivity(
         }
 
         ++result.validWindows;
+        if (hasInvalidChannel) {
+            destination.state = WindowActivityState::Uncertain;
+            destination.confidence = 0.1;
+            continue;
+        }
+
         if (!hasNonSilentChannel || representativeRms <= 0.0) {
             destination.levelDb = -std::numeric_limits<double>::infinity();
             destination.state = WindowActivityState::DigitalSilence;
@@ -131,7 +139,8 @@ ActivityDetectionResult detectWindowActivity(
     const double contrast =
         quantileOfSorted(nonSilentLevels, 0.8) -
         quantileOfSorted(nonSilentLevels, 0.2);
-    if (contrast < config.minimumContrastDb) {
+    if (contrast < std::max(config.minimumContrastDb,
+                            config.enterMarginDb)) {
         result.status = ActivityDetectionStatus::InsufficientContrast;
         for (auto& window : result.windows) {
             if (window.state == WindowActivityState::BelowThreshold) {
