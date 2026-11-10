@@ -58,6 +58,8 @@ if(PGCLIP_BUILD_VST3)
     set(SMTG_ENABLE_VST3_PLUGIN_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(SMTG_ENABLE_VST3_HOSTING_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(SMTG_CREATE_PLUGIN_LINK OFF CACHE BOOL "" FORCE)
+    set(SMTG_RUN_VST_VALIDATOR ON CACHE BOOL "" FORCE)
+    set(SMTG_CREATE_MODULE_INFO ON CACHE BOOL "" FORCE)
 
     FetchContent_Declare(vst3sdk
         GIT_REPOSITORY https://github.com/steinbergmedia/vst3sdk.git
@@ -78,7 +80,7 @@ if(PGCLIP_BUILD_VST3)
         src/vst3/version.h
     )
 
-    smtg_add_vst3plugin(PGClipGainPro ${PGCLIP_VST3_SOURCES})
+    smtg_add_vst3plugin(PGClipGainPro PACKAGE_NAME "PG Clip Gain Pro" SOURCES_LIST ${PGCLIP_VST3_SOURCES})
     smtg_target_configure_version_file(PGClipGainPro)
 
     target_compile_features(PGClipGainPro PRIVATE cxx_std_17)
