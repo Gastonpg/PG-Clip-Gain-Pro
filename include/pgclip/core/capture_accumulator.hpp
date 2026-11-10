@@ -16,8 +16,9 @@ enum class CaptureAppendResult {
     CapacityExceeded
 };
 
-// Single-producer, preallocated capture storage.
-// Construct and begin outside the audio callback; append performs no allocation.
+// Preallocated bounded capture storage.
+// All lifecycle calls must be serialized with append; begin/finish/cancel are
+// called only while the host callback is quiescent. append performs no allocation.
 class CaptureAccumulator {
 public:
     CaptureAccumulator(AudioFormat format, FrameIndex capacityFrames);
