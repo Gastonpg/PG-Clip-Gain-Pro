@@ -78,19 +78,27 @@ QueueDrainStatus QueuedCaptureAssembler::drainOne(
     return QueueDrainStatus::BlockAccepted;
 }
 
-void QueuedCaptureAssembler::finish(SpscAudioBlockQueue& queue) noexcept {
+bool QueuedCaptureAssembler::finish(SpscAudioBlockQueue& queue) noexcept {
+    if (queue.queuedBlocks() != 0U) {
+        return false;
+    }
     if (queue.droppedBlocks() != droppedBlocksAtBegin_) {
         accumulator_.markDiscontinuous();
     }
     accumulator_.finish();
+    return accumulator_.descriptor().state != CaptureState::Capturing;
 }
 
-void QueuedCaptureAssembler::finishAtCapturedLength(
+bool QueuedCaptureAssembler::finishAtCapturedLength(
     SpscAudioBlockQueue& queue) noexcept {
+    if (queue.queuedBlocks() != 0U) {
+        return false;
+    }
     if (queue.droppedBlocks() != droppedBlocksAtBegin_) {
         accumulator_.markDiscontinuous();
     }
     accumulator_.finishAtCapturedLength();
+    return accumulator_.descriptor().state != CaptureState::Capturing;
 }
 
 void QueuedCaptureAssembler::cancel() noexcept {
