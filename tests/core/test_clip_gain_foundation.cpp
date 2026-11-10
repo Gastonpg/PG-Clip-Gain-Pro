@@ -172,6 +172,16 @@ int main() {
                           shortCurve.curve.points[2U].gainDb == 0.0,
                       "handle two-frame phrases and deduplicate contiguous zero-gain boundary");
 
+                auto overlappingKeep = recommendations.recommendations;
+                overlappingKeep[0U].range.end = 3000U;
+                const auto overlapWithKeep = buildClipGainCurve(
+                    overlappingKeep,
+                    static_cast<FrameIndex>(vocalTake.size()),
+                    ClipGainCurveConfig{120U, 120U});
+                check(overlapWithKeep.status ==
+                          ClipGainCurveStatus::OverlappingRegions,
+                      "do not apply gain through an overlapping phrase marked Keep");
+
                 auto overlappingRecommendations = recommendations.recommendations;
                 overlappingRecommendations[2U].range.start = 3800U;
                 const auto overlapCurve = buildClipGainCurve(
