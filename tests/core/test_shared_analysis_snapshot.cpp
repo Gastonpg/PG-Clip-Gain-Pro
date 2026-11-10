@@ -2,6 +2,7 @@
 #include "pgclip/core/synthetic_signals.hpp"
 
 #include <iostream>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -44,6 +45,13 @@ int main() {
                   "snapshot exposes immutable descriptor collection");
         }
 
+        const auto mismatchedFormat = buildSharedAnalysisSnapshot(
+            CaptureDescriptor{AudioFormat{44100U, 1U}, 256U,
+                              CaptureState::Complete, false},
+            config, analysis);
+        check(mismatchedFormat.status == SnapshotBuildStatus::CoverageMismatch,
+              "reject snapshot with mismatched sample rate");
+
         const CaptureDescriptor partial{
             format, 128U, CaptureState::Partial, false
         };
@@ -83,6 +91,18 @@ int main() {
         check(rejected.status == SnapshotBuildStatus::InvalidDescriptor,
               "reject impossible RMS greater than peak");
     }
+
+    std::vector<float> withNan(128U, 0.1F);
+    withNan[4U] = std::numeric_limits<float>::quiet_NaN();
+    const auto invalidWindowAnalysis = analyzeWindowDescriptors(
+        AudioBufferView{AudioFormat{48000U, 1U}, 128U, withNan.data()},
+        AnalysisConfig{128U, 128U, 1U});
+    const auto snapshotWithInvalidWindow = buildSharedAnalysisSnapshot(
+        CaptureDescriptor{AudioFormat{48000U, 1U}, 128U,
+                          CaptureState::Complete, false},
+        AnalysisConfig{128U, 128U, 1U}, invalidWindowAnalysis);
+    check(snapshotWithInvalidWindow.status == SnapshotBuildStatus::Ready,
+          "preserve invalid window as flagged evidence for engines to abstain");
 
     if (failures != 0) {
         std::cerr << failures << " snapshot test(s) failed.\n";
