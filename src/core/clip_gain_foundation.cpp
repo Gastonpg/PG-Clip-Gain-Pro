@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 #include <vector>
 
 namespace pgclip {
@@ -86,7 +87,8 @@ PhraseProfileResult analyzePhraseProfiles(
     }
 
     if (activity.status != ActivityDetectionStatus::Ready ||
-        activity.regions.empty()) {
+        activity.regions.empty() ||
+        activity.windows.size() != snapshot.windows().size()) {
         result.status = PhraseProfileStatus::NoCandidateRegions;
         return result;
     }
@@ -97,6 +99,16 @@ PhraseProfileResult analyzePhraseProfiles(
     result.profiles.reserve(activity.regions.size());
 
     for (const auto& region : activity.regions) {
+        if (validate(region.range, snapshot.totalFrames()) ||
+            !std::isfinite(region.confidence) ||
+            region.confidence < 0.0 || region.confidence > 1.0) {
+            result.status = PhraseProfileStatus::InvalidConfiguration;
+            result.issue = {ValidationCode::RangeOutsideCapture,
+                            "Activity region range or confidence does not match the snapshot."};
+            result.profiles.clear();
+            return result;
+        }
+
         std::vector<double> levelValues;
         std::vector<double> peakValues;
         std::vector<double> meanAbsoluteValues;
