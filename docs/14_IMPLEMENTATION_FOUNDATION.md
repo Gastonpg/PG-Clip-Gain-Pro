@@ -14,7 +14,7 @@
 - Snapshot compartido inmutable con comprobación de formato, configuración y cobertura.
 - Estadísticas contextuales descriptivas con mediana, MAD y rangos.
 - Cola SPSC acotada y preasignada para transferir bloques de audio del callback al worker: índices atómicos de 64 bits, sin locks ni asignaciones en push/pop, soporte de entrada float32/float64 (copia de análisis float32), flags de silencio, metadatos temporales y contador de bloques descartados por saturación.
-- Seis suites anteriores aprobadas localmente en Release y Debug con AddressSanitizer y UndefinedBehaviorSanitizer. Se agregaron una séptima suite SPSC de concurrencia con 20.000 bloques y validaciones de la octava suite ampliada de descriptores/snapshots; ambas quedan pendientes de ejecución en CI.
+- Seis suites anteriores aprobadas localmente en Release y Debug con AddressSanitizer y UndefinedBehaviorSanitizer. Se agregó una séptima suite SPSC de concurrencia con 20.000 bloques y se ampliaron las pruebas existentes de descriptores y snapshots; los cambios nuevos quedan pendientes de ejecución en CI.
 
 ## 2. Primera integración VST3
 
