@@ -27,10 +27,12 @@ public:
     QueuedCaptureAssembler(const QueuedCaptureAssembler&) = delete;
     QueuedCaptureAssembler& operator=(const QueuedCaptureAssembler&) = delete;
 
-    bool begin(FrameIndex sourceStartFrame,
+    bool begin(SpscAudioBlockQueue& queue,
+               FrameIndex sourceStartFrame,
                FrameIndex expectedFrameCount) noexcept;
     QueueDrainStatus drainOne(SpscAudioBlockQueue& queue) noexcept;
-    void finish() noexcept;
+    void finish(SpscAudioBlockQueue& queue) noexcept;
+    void finishAtCapturedLength(SpscAudioBlockQueue& queue) noexcept;
     void cancel() noexcept;
 
     CaptureDescriptor descriptor() const noexcept;
@@ -41,6 +43,7 @@ public:
 private:
     AudioFormat format_{};
     FrameIndex expectedFrameCount_{0};
+    std::uint64_t droppedBlocksAtBegin_{0};
     CaptureAccumulator accumulator_;
     std::vector<float> scratch_;
 };
