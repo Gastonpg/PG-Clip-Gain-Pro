@@ -1,6 +1,6 @@
 # PG Clip Gain Pro — Integración VST3 de captura y ciclo de vida
 
-**Estado:** especificación de integración previa a código. No afirma que la captura esté conectada ni validada.
+**Estado:** plan de integración con tres módulos host-independientes ya implementados (coordinador de ciclo de vida, adaptador planar y guardián de continuidad). La captura aún no está conectada ni validada dentro del VST3.
 
 ## 1. Objetivo de la primera captura funcional
 
