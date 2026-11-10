@@ -128,6 +128,17 @@ int main() {
                           "reduce louder phrase by a moderated relative amount");
                 }
 
+                auto uncertainProfiles = phraseProfiles.profiles;
+                uncertainProfiles[1U].eligibleForReference = false;
+                const auto abstained = recommendClipGain(
+                    uncertainProfiles,
+                    reference,
+                    ClipGainRecommendationConfig{0.5, 6.0, 6.0, 0.5});
+                check(abstained.status == ClipGainRecommendationStatus::Ready &&
+                          abstained.recommendations[1U].action ==
+                              GainRecommendationAction::Abstain,
+                      "abstain rather than adjust a phrase marked ineligible");
+
                 const auto zeroStrength = recommendClipGain(
                     phraseProfiles.profiles,
                     reference,
