@@ -1,7 +1,6 @@
 #pragma once
 
-#include "pluginterfaces/base/f（unknown.h"
-#include "pluginterfaces/base/fuid.h"
+#include "pluginterfaces/base/funknown.h"
 
 namespace Steinberg {
 namespace Vst {
