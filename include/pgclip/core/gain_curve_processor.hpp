@@ -35,7 +35,14 @@ struct GainCurveRuntimeResult {
     GainCurveRuntime runtime{};
 };
 
-GainCurveRuntimeResult prepareGainCurveRuntime(const GainCurve& curve);
+struct GainCurveRuntimeConfig {
+    double maximumBoostDb{0.0};
+    double maximumCutDb{0.0};
+};
+
+GainCurveRuntimeResult prepareGainCurveRuntime(
+    const GainCurve& curve,
+    const GainCurveRuntimeConfig& config);
 
 struct CurveCombinationConfig {
     double maximumCombinedBoostDb{0.0};
