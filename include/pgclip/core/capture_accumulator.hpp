@@ -29,6 +29,8 @@ public:
                                const float* interleaved,
                                FrameIndex frameCount) noexcept;
     void finish() noexcept;
+    void finishAtCapturedLength() noexcept;
+    void markDiscontinuous() noexcept;
     void cancel() noexcept;
 
     CaptureDescriptor descriptor() const noexcept;
