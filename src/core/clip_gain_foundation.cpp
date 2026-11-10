@@ -313,14 +313,12 @@ ClipGainCurveResult buildClipGainCurve(
         return result;
     }
 
+    std::vector<const PhraseGainRecommendation*> orderedRecommendations;
     std::vector<const PhraseGainRecommendation*> adjustments;
+    orderedRecommendations.reserve(recommendations.size());
     adjustments.reserve(recommendations.size());
 
     for (const auto& recommendation : recommendations) {
-        if (recommendation.action != GainRecommendationAction::Adjust) {
-            continue;
-        }
-
         if (validate(recommendation.range, totalFrames) ||
             !std::isfinite(recommendation.correctionDb) ||
             !std::isfinite(recommendation.confidence) ||
@@ -331,22 +329,28 @@ ClipGainCurveResult buildClipGainCurve(
                             "A gain recommendation has an invalid range, gain, or confidence."};
             return result;
         }
-
-        adjustments.push_back(&recommendation);
+        orderedRecommendations.push_back(&recommendation);
     }
 
-    std::sort(adjustments.begin(), adjustments.end(),
+    std::sort(orderedRecommendations.begin(), orderedRecommendations.end(),
               [](const auto* left, const auto* right) {
                   return left->range.start < right->range.start;
               });
 
-    for (std::size_t index = 1U; index < adjustments.size(); ++index) {
-        if (adjustments[index]->range.start <
-            adjustments[index - 1U]->range.end) {
+    for (std::size_t index = 1U;
+         index < orderedRecommendations.size(); ++index) {
+        if (orderedRecommendations[index]->range.start <
+            orderedRecommendations[index - 1U]->range.end) {
             result.status = ClipGainCurveStatus::OverlappingRegions;
             result.issue = {ValidationCode::UnorderedCurvePoints,
-                            "Overlapping phrase recommendations cannot be merged safely."};
+                            "Overlapping phrase regions cannot be safely modified or left untouched."};
             return result;
+        }
+    }
+
+    for (const auto* recommendation : orderedRecommendations) {
+        if (recommendation->action == GainRecommendationAction::Adjust) {
+            adjustments.push_back(recommendation);
         }
     }
 
