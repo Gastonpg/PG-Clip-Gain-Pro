@@ -80,6 +80,7 @@ El centro temporal de una ventana se representa mediante índice entero o racion
 
 - Energía/RMS por ventana.
 - Pico de muestra.
+- Media absoluta, offset DC, tasa de cruces por cero y factor de cresta (descriptores básicos ya prototipados).
 - Estimación de pico entre muestras, si se implementa y valida.
 - Envolvente suavizada.
 - Descriptor de sonoridad vocal.
