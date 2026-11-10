@@ -208,9 +208,155 @@ ClipPeakResult detectClipPeakEvents(
         result.events.push_back(event);
     }
 
+    std::vector<PeakEvent> consolidated;
+    consolidated.reserve(result.events.size());
+    for (const auto& event : result.events) {
+        if (!consolidated.empty() &&
+            event.range.start < consolidated.back().range.end) {
+            auto& previous = consolidated.back();
+            previous.range.end =
+                std::max(previous.range.end, event.range.end);
+            previous.confidence =
+                std::min(previous.confidence, event.confidence);
+            previous.protectedPhraseEdge =
+                previous.protectedPhraseEdge || event.protectedPhraseEdge;
+
+            if (previous.action == PeakEventAction::Review ||
+                event.action == PeakEventAction::Review ||
+                previous.protectedPhraseEdge) {
+                previous.action = PeakEventAction::Review;
+                previous.suggestedAttenuationDb = 0.0;
+            } else {
+                previous.suggestedAttenuationDb = std::max(
+                    previous.suggestedAttenuationDb,
+                    event.suggestedAttenuationDb);
+            }
+
+            if (event.excessDb > previous.excessDb) {
+                previous.peakDb = event.peakDb;
+                previous.localMedianPeakDb = event.localMedianPeakDb;
+                previous.excessDb = event.excessDb;
+                previous.crestFactor = event.crestFactor;
+            }
+        } else {
+            consolidated.push_back(event);
+        }
+    }
+    result.events = std::move(consolidated);
+
     result.status = result.windowsScanned > result.invalidWindows
         ? ClipPeakStatus::Ready
         : ClipPeakStatus::NoUsableContext;
+    return result;
+}
+
+ClipPeakCurveResult buildClipPeakCurve(
+    const std::vector<PeakEvent>& events,
+    FrameIndex totalFrames,
+    const ClipPeakCurveConfig& config) {
+    ClipPeakCurveResult result;
+
+    if (totalFrames == 0U ||
+        config.rampInFrames == 0U ||
+        config.rampOutFrames == 0U) {
+        result.status = ClipPeakCurveStatus::InvalidConfiguration;
+        result.issue = {ValidationCode::InvalidWindow,
+                        "Clip Peak curve requires a non-empty capture and positive ramp lengths."};
+        return result;
+    }
+
+    std::vector<const PeakEvent*> ordered;
+    ordered.reserve(events.size());
+
+    for (const auto& event : events) {
+        if (validate(event.range, totalFrames) ||
+            !std::isfinite(event.suggestedAttenuationDb) ||
+            !std::isfinite(event.confidence) ||
+            event.confidence < 0.0 || event.confidence > 1.0 ||
+            event.suggestedAttenuationDb > 0.0) {
+            result.status = ClipPeakCurveStatus::InvalidEvents;
+            result.issue = {ValidationCode::RangeOutsideCapture,
+                            "Clip Peak event contains an invalid range, attenuation, or confidence."};
+            return result;
+        }
+        ordered.push_back(&event);
+    }
+
+    std::sort(ordered.begin(), ordered.end(),
+              [](const auto* left, const auto* right) {
+                  return left->range.start < right->range.start;
+              });
+
+    for (std::size_t index = 1U; index < ordered.size(); ++index) {
+        if (ordered[index]->range.start < ordered[index - 1U]->range.end) {
+            result.status = ClipPeakCurveStatus::OverlappingEvents;
+            result.issue = {ValidationCode::UnorderedCurvePoints,
+                            "Clip Peak events overlap and must be consolidated before curve creation."};
+            return result;
+        }
+    }
+
+    const auto appendPoint = [&result](FrameIndex frame, double gainDb) {
+        if (!result.curve.points.empty() &&
+            result.curve.points.back().frame == frame) {
+            return std::abs(result.curve.points.back().gainDb - gainDb) < 1.0e-9;
+        }
+        result.curve.points.push_back({frame, gainDb});
+        return true;
+    };
+
+    for (const auto* event : ordered) {
+        if (event->action != PeakEventAction::Attenuate ||
+            event->protectedPhraseEdge) {
+            continue;
+        }
+
+        if (event->suggestedAttenuationDb >= 0.0) {
+            result.status = ClipPeakCurveStatus::InvalidEvents;
+            result.issue = {ValidationCode::NonFiniteGain,
+                            "An attenuation event must have a negative gain recommendation."};
+            result.curve.points.clear();
+            return result;
+        }
+
+        const FrameIndex duration = event->range.end - event->range.start;
+        if (duration < 2U) {
+            result.status = ClipPeakCurveStatus::InvalidEvents;
+            result.issue = {ValidationCode::EmptyRange,
+                            "A peak event needs at least two frames for a smooth ramp."};
+            result.curve.points.clear();
+            return result;
+        }
+
+        const FrameIndex halfDuration = duration / 2U;
+        const FrameIndex rampIn =
+            std::min(config.rampInFrames, halfDuration);
+        const FrameIndex rampOut =
+            std::min(config.rampOutFrames, duration - rampIn);
+        const FrameIndex peakStart = event->range.start + rampIn;
+        const FrameIndex peakEnd = event->range.end - rampOut;
+
+        if (!appendPoint(event->range.start, 0.0) ||
+            !appendPoint(peakStart, event->suggestedAttenuationDb) ||
+            (peakEnd > peakStart &&
+             !appendPoint(peakEnd, event->suggestedAttenuationDb)) ||
+            !appendPoint(event->range.end, 0.0)) {
+            result.status = ClipPeakCurveStatus::InvalidEvents;
+            result.issue = {ValidationCode::DuplicateCurvePoint,
+                            "Clip Peak curve points collide with incompatible values."};
+            result.curve.points.clear();
+            return result;
+        }
+    }
+
+    if (const auto issue = validate(result.curve)) {
+        result.status = ClipPeakCurveStatus::InvalidEvents;
+        result.issue = issue;
+        result.curve.points.clear();
+        return result;
+    }
+
+    result.status = ClipPeakCurveStatus::Ready;
     return result;
 }
 
