@@ -22,7 +22,12 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Configure
+      - name: Configure Windows x64
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DPGCLIP_BUILD_TESTS=ON -DPGCLIP_BUILD_VST3=ON
+
+      - name: Configure Linux x64
+        if: runner.os == 'Linux'
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPGCLIP_BUILD_TESTS=ON -DPGCLIP_BUILD_VST3=ON
 
       - name: Build core and VST3
