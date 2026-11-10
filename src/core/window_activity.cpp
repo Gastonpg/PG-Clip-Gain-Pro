@@ -247,6 +247,44 @@ ActivityDetectionResult detectWindowActivity(
         }
     }
 
+    // Group active windows and short bridged pauses into editable candidates.
+    std::size_t regionIndex = 0U;
+    while (regionIndex < result.windows.size()) {
+        const auto state = result.windows[regionIndex].state;
+        if (state != WindowActivityState::Active &&
+            state != WindowActivityState::BridgedPause) {
+            ++regionIndex;
+            continue;
+        }
+
+        ActivityRegionCandidate region;
+        region.range.start = result.windows[regionIndex].range.start;
+        double confidenceSum = 0.0;
+
+        while (regionIndex < result.windows.size()) {
+            const auto& window = result.windows[regionIndex];
+            if (window.state != WindowActivityState::Active &&
+                window.state != WindowActivityState::BridgedPause) {
+                break;
+            }
+
+            region.range.end = window.range.end;
+            if (window.state == WindowActivityState::Active) {
+                ++region.activeWindows;
+                confidenceSum += window.confidence;
+            } else {
+                ++region.bridgedPauseWindows;
+                region.containsBridgedPause = true;
+            }
+            ++regionIndex;
+        }
+
+        region.confidence = region.activeWindows > 0U
+            ? confidenceSum / static_cast<double>(region.activeWindows)
+            : 0.0;
+        result.regions.push_back(region);
+    }
+
     result.status = ActivityDetectionStatus::Ready;
     return result;
 }
