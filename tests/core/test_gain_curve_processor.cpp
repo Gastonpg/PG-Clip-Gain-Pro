@@ -138,6 +138,14 @@ int main() {
               GainCurveRuntimeStatus::InvalidCurve,
           "reject runtime curves above the configured gain safety ceiling");
 
+    const GainCurve underflowCurve{{
+        GainPoint{0U, 0.0}, GainPoint{4U, -10000.0}
+    }};
+    check(prepareGainCurveRuntime(
+              underflowCurve, GainCurveRuntimeConfig{0.0, 10000.0}).status ==
+              GainCurveRuntimeStatus::InvalidCurve,
+          "reject attenuation that underflows to zero linear gain");
+
     const auto invalidPointerStatus = applyGainCurveToBlock(
         MutableAudioBlockView{nullptr, 0U, 2U, 1U,
                               AudioSampleFormat::Float32},
