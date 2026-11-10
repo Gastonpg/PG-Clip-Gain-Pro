@@ -22,7 +22,8 @@ class CaptureAccumulator {
 public:
     CaptureAccumulator(AudioFormat format, FrameIndex capacityFrames);
 
-    void begin(FrameIndex sourceStartFrame) noexcept;
+    bool begin(FrameIndex sourceStartFrame,
+               FrameIndex expectedFrameCount) noexcept;
     CaptureAppendResult append(FrameIndex sourceStartFrame,
                                const float* interleaved,
                                FrameIndex frameCount) noexcept;
@@ -38,6 +39,7 @@ private:
     AudioFormat format_{};
     FrameIndex capacityFrames_{0};
     FrameIndex capturedFrames_{0};
+    FrameIndex expectedFrameCount_{0};
     FrameIndex expectedSourceFrame_{0};
     CaptureState state_{CaptureState::Empty};
     bool hasDiscontinuities_{false};
