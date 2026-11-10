@@ -108,3 +108,17 @@ Antes de declarar listo el motor:
 - verificar que la UI no interrumpe audio.
 
 La prioridad es estabilidad. Si el análisis consume demasiado, se ralentiza o pausa voluntariamente; nunca se degrada reproducción para terminar antes.
+
+
+## 9. Estado del prototipo de captura
+
+La implementación inicial contiene un acumulador C++ preasignado y acotado, independiente de VST3. Acepta bloques contiguos con posición explícita, detecta huecos y solapamientos, y solo declara completa una región cuando recibe exactamente la longitud esperada.
+
+Límites actuales:
+- todavía no está conectado al procesador VST3 ni a FL Studio;
+- no implementa todavía una cola SPSC entre callback y worker;
+- no resuelve por sí mismo seek, loop, stop, cambios de región ni render offline;
+- el acumulador no es thread-safe: el llamador debe serializar las operaciones y asegurar que el callback esté quiescente durante begin/finish/cancel;
+- el analizador de ventanas y las estadísticas contextuales funcionan offline sobre vistas PCM y snapshots ya construidos.
+
+La integración real deberá incorporar un mecanismo de transferencia acotado y probado para el callback, identificar discontinuidades del transporte y asegurar que el análisis pesado ocurra fuera del hilo de audio. La implementación actual no debe presentarse como captura VST3 lista para producción.
