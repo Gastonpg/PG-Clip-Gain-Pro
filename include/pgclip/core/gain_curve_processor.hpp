@@ -3,6 +3,7 @@
 #include "pgclip/core/spsc_audio_block_queue.hpp"
 #include "pgclip/core/types.hpp"
 
+#include <utility>
 #include <vector>
 
 namespace pgclip {
@@ -17,12 +18,13 @@ struct GainCurveRuntimeConfig;
 
 class GainCurveRuntime {
 public:
+    GainCurveRuntime() = default;
+    explicit GainCurveRuntime(std::vector<LinearGainPoint> points)
+        : points_(std::move(points)) {}
+
     const std::vector<LinearGainPoint>& points() const noexcept;
 
 private:
-    friend struct GainCurveRuntimeResult;
-    friend GainCurveRuntimeResult prepareGainCurveRuntime(
-        const GainCurve&, const GainCurveRuntimeConfig&);
     std::vector<LinearGainPoint> points_;
 };
 
