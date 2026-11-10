@@ -1,5 +1,6 @@
 #include "pgclip/core/synthetic_signals.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 
@@ -41,7 +42,7 @@ int main() {
                                  1000.0, 0.25, true);
     check(stereo && stereo->interleaved.size() == 64U,
           "stereo fixture is interleaved");
-    check(stereo && stereo->interleaved[1U] == -stereo->interleaved[0U],
+    check(stereo && stereo->interleaved[7U] == -stereo->interleaved[6U],
           "right channel polarity can be inverted");
 
     const auto impulse = makeImpulse(AudioFormat{48000U, 2U}, 16U, 7U, 0.75F);
