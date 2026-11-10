@@ -96,8 +96,8 @@ int main() {
             check(reference.status == AdaptiveReferenceStatus::Ready,
                   "select adaptive reference from the recording itself");
             if (reference.status == AdaptiveReferenceStatus::Ready) {
-                check(std::abs(reference.referenceDb -
-                               phraseProfiles.profiles[0U].levelDb) < 0.2,
+                check(std::abs(reference.referenceRmsDb -
+                               phraseProfiles.profiles[0U].rmsLevelDb) < 0.2,
                       "choose median phrase level rather than fixed dBFS target");
                 check(reference.medianAbsoluteDeviationDb > 5.0,
                       "report robust phrase-level dispersion");
