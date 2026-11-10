@@ -11,8 +11,6 @@ struct ActivityDetectionConfig {
     double enterMarginDb{0.0};
     double exitMarginDb{0.0};
     double lowerQuantile{0.0};
-    double minimumDigitalSilenceRatio{0.0};
-    double digitalSilenceFloorDb{0.0};
     double minimumContrastDb{0.0};
     std::uint32_t bridgeGapWindows{0};
     std::uint32_t minimumActiveWindows{1};
@@ -36,7 +34,7 @@ enum class WindowActivityState {
 
 struct WindowActivity {
     FrameRange range{};
-    double levelDb{-120.0};
+    double levelDb{0.0};
     double confidence{0.0};
     WindowActivityState state{WindowActivityState::Invalid};
 };
