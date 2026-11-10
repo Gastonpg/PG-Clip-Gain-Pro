@@ -35,7 +35,7 @@ Son etiquetas de análisis, no reconocimiento fonético.
 
 ## 3.1. Prototipo actual de actividad por ventanas
 
-La primera implementación en C++ produce etiquetas candidatas por ventana mediante RMS representativo entre canales, cuantiles de nivel no silencioso, umbrales relativos de entrada/salida, histéresis y puente de pausas cortas. Si no existe contraste estadístico suficiente, se abstiene y marca la evidencia como incierta. Los parámetros se suministran explícitamente y no hay un preset de producción validado. Este prototipo no reconoce voz ni decide límites finales de frase.
+La primera implementación en C++ produce etiquetas candidatas por ventana mediante RMS representativo entre canales, cuantiles de nivel no silencioso, umbrales relativos de entrada/salida, histéresis y puente de pausas cortas. Agrupa ventanas sostenidas y pausas puenteadas en regiones candidatas con confianza descriptiva. Si no existe contraste estadístico suficiente, se abstiene y marca la evidencia como incierta. Los parámetros se suministran explícitamente y no hay un preset de producción validado. Este prototipo no reconoce voz ni decide límites fonéticos finales de frase.
 
 ## 3. Análisis por ventanas
 
