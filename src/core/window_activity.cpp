@@ -159,7 +159,8 @@ ActivityDetectionResult detectWindowActivity(
     bool active = false;
     for (auto& window : result.windows) {
         if (window.state == WindowActivityState::Invalid ||
-            window.state == WindowActivityState::DigitalSilence) {
+            window.state == WindowActivityState::DigitalSilence ||
+            window.state == WindowActivityState::Uncertain) {
             active = false;
             continue;
         }
@@ -195,7 +196,8 @@ ActivityDetectionResult detectWindowActivity(
             std::size_t gapStart = index + 1U;
             while (gapStart < result.windows.size() &&
                    result.windows[gapStart].state != WindowActivityState::Active &&
-                   result.windows[gapStart].state != WindowActivityState::Invalid) {
+                   result.windows[gapStart].state != WindowActivityState::Invalid &&
+                   result.windows[gapStart].state != WindowActivityState::Uncertain) {
                 ++gapStart;
             }
 
