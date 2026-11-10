@@ -66,6 +66,39 @@ int main() {
               "apply identical curve to stereo float64 channels");
     }
 
+    const GainCurve clipGainCurve{{
+        GainPoint{0U, 0.0}, GainPoint{5U, 6.0}, GainPoint{10U, 0.0}
+    }};
+    const GainCurve clipPeakCurve{{
+        GainPoint{0U, 0.0}, GainPoint{5U, -6.0}, GainPoint{10U, 0.0}
+    }};
+    const auto neutralCombined = combineStaticGainCurves(
+        clipGainCurve, clipPeakCurve, 10U,
+        CurveCombinationConfig{6.0, 6.0});
+    check(neutralCombined.status == CurveCombinationStatus::Ready &&
+              neutralCombined.curve.points.size() == 3U &&
+              std::abs(neutralCombined.curve.points[1U].gainDb) < 1.0e-6,
+          "combine opposite Clip Gain and Clip Peak corrections in linear gain");
+
+    const GainCurve extraCut{{
+        GainPoint{0U, 0.0}, GainPoint{5U, -6.0}, GainPoint{10U, 0.0}
+    }};
+    const auto cappedCombined = combineStaticGainCurves(
+        extraCut, clipPeakCurve, 10U,
+        CurveCombinationConfig{6.0, 6.0});
+    check(cappedCombined.status == CurveCombinationStatus::Ready &&
+              std::abs(cappedCombined.curve.points[1U].gainDb + 6.0) < 1.0e-6,
+          "cap the combined attenuation to the shared safety limit");
+
+    const GainCurve outsideCurve{{
+        GainPoint{0U, 0.0}, GainPoint{11U, 3.0}
+    }};
+    check(combineStaticGainCurves(
+              outsideCurve, emptyCurve, 10U,
+              CurveCombinationConfig{6.0, 6.0}).status ==
+              CurveCombinationStatus::InvalidInputCurve,
+          "reject combined curve points outside the capture timeline");
+
     const GainCurve emptyCurve{};
     const auto emptyRuntime = prepareGainCurveRuntime(emptyCurve);
     std::array<float, 2> unchanged{0.25F, -0.25F};
