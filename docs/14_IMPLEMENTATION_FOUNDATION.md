@@ -1,6 +1,6 @@
 # PG Clip Gain Pro — Base de implementación v0.4
 
-**Estado:** núcleo DSP C++17, prototipos iniciales de análisis y primer módulo VST3 integrados en el proyecto. La versión anterior del núcleo pasó 6/6 suites localmente en Release y Debug con AddressSanitizer/UndefinedBehaviorSanitizer. Desde entonces se ampliaron descriptores y validaciones, y el banco actual tiene 12 suites configuradas; el código actual completo debe revalidarse. La compilación/validación VST3 está configurada en CI para Windows x64 y Linux x64, pero todavía no hay resultado remoto confirmado.
+**Estado:** núcleo DSP C++17, prototipos iniciales de análisis y primer módulo VST3 integrados en el proyecto. La versión anterior del núcleo pasó 6/6 suites localmente en Release y Debug con AddressSanitizer/UndefinedBehaviorSanitizer. Desde entonces se ampliaron descriptores y validaciones, y el banco actual tiene 13 suites configuradas; el código actual completo debe revalidarse. La compilación/validación VST3 está configurada en CI para Windows x64 y Linux x64, pero todavía no hay resultado remoto confirmado.
 **Importante:** el VST3 actual es un shell transparente (passthrough), no el producto terminado. No se declara compatible con FL Studio hasta pasar el Validator y probar el binario en FL Studio 2026 x64.
 
 ## 1. Núcleo DSP host-independiente
@@ -24,7 +24,7 @@
 
 ## 2. Pruebas del núcleo
 
-CMake define 12 ejecutables de prueba:
+CMake define 13 ejecutables de prueba:
 1. contratos y validadores (`pgclip_core_tests`);
 2. fixtures PCM (`pgclip_fixture_tests`);
 3. captura acotada (`pgclip_capture_tests`);
@@ -32,13 +32,13 @@ CMake define 12 ejecutables de prueba:
 5. snapshot y cobertura (`pgclip_snapshot_tests`);
 6. estadísticas contextuales (`pgclip_context_tests`);
 7. cola SPSC y orden concurrente (20.000 bloques; `pgclip_spsc_queue_tests`);
-8. ensamblado de captura desde la cola (`pgclip_queued_capture_tests`);
-9. detector de actividad y abstención (`pgclip_activity_tests`);
-10. perfiles, referencia adaptativa y recomendaciones Clip Gain (`pgclip_clip_gain_tests`);
-11. preparación y aplicación de curvas estáticas (`pgclip_gain_curve_tests`);
-12. detección y curvas candidatas de Clip Peak (`pgclip_clip_peak_tests`).
+8. ensamblado de captura desde la cola (`pgclip_queued_capture_tests`);\n9. handshake atómico de ciclo de vida de captura (`pgclip_capture_session_tests`);
+10. detector de actividad y abstención (`pgclip_activity_tests`);
+11. perfiles, referencia adaptativa y recomendaciones Clip Gain (`pgclip_clip_gain_tests`);
+12. preparación y aplicación de curvas estáticas (`pgclip_gain_curve_tests`);
+13. detección y curvas candidatas de Clip Peak (`pgclip_clip_peak_tests`).
 
-La versión anterior de seis suites pasó localmente en Release y Debug con AddressSanitizer y UndefinedBehaviorSanitizer. Después se modificaron las suites de descriptores/snapshot y se añadieron módulos y pruebas. **Las 12 suites actuales deben ejecutarse de nuevo**; no se afirma que esta versión ampliada ya haya pasado.
+La versión anterior de seis suites pasó localmente en Release y Debug con AddressSanitizer y UndefinedBehaviorSanitizer. Después se modificaron las suites de descriptores/snapshot y se añadieron módulos y pruebas. **Las 13 suites actuales deben ejecutarse de nuevo**; no se afirma que esta versión ampliada ya haya pasado.
 
 ## 3. Primera integración VST3
 
@@ -70,7 +70,7 @@ La CI está configurada, pero no hay resultado remoto confirmado todavía. Un bu
 
 - El shell VST3 aún no está validado por CI ni probado en FL Studio.
 - No tiene GUI ni controles de usuario.
-- La cola SPSC y el ensamblador existen como módulos host-independientes, pero todavía no están conectados al callback real ni a un hilo worker dentro del VST3.
+- La cola SPSC, el ensamblador y el nuevo coordinador atómico de estados existen como módulos host-independientes, pero todavía no están conectados al callback real ni a un hilo worker dentro del VST3.
 - No captura todavía una región real del DAW ni gestiona seek/loop/stop desde el transporte.
 - La actividad es energética y candidata; no reconoce voz ni refina límites fonéticos.
 - No protege todavía consonantes, respiraciones y colas mediante una segunda pasada validada.
@@ -82,7 +82,7 @@ La CI está configurada, pero no hay resultado remoto confirmado todavía. Un bu
 
 ## 6. Próximas etapas
 
-1. Conseguir compilación Windows x64 y Linux x64, 12/12 suites y Validator verde.
+1. Conseguir compilación Windows x64 y Linux x64, 13/13 suites y Validator verde.
 2. Instalar el artefacto Windows en FL Studio 2026 x64 y probar mono/estéreo, float32/float64, reproducción, duplicación de instancias y restauración de proyecto.
 3. Integrar callback VST3 → cola SPSC → worker, con ciclo de vida seguro y transporte del host.
 4. Resolver captura de regiones largas y estrategia de memoria/caché temporal.
