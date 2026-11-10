@@ -30,7 +30,7 @@ El módulo host-independiente `CaptureSessionControl` implementa el primer coord
 8. `Rejected`: preparación fallida, overflow o discontinuidad.
 9. `Cancelled`: cancelación confirmada tras detener al productor.
 
-El callback será el único productor de la SPSC; el worker, el único consumidor. El coordinador solo intercambia estados atómicos: no posee audio, no llama al acumulador y no crea hilos. La suite independiente está registrada, pero todavía no fue ejecutada.
+El callback será el único productor de la SPSC; el worker, el único consumidor. El coordinador solo intercambia estados atómicos: no posee audio, no llama al acumulador y no crea hilos. Los fallos y cancelaciones tampoco publican un estado terminal reutilizable hasta que el productor quedó quiescente y el worker terminó de limpiar la sesión. La suite independiente está registrada, pero todavía no fue ejecutada.
 
 El armado requiere que el worker prepare el ensamblador antes de publicar `Armed`. Al detener o cancelar, el consumidor no debe finalizar ni liberar recursos hasta que el host garantice que el callback dejó de ejecutarse y no puede iniciar otra operación de producción. Ese punto de quiescencia es un contrato externo que la integración VST3 aún debe resolver; el coordinador no lo simula ni lo presume.
 
@@ -87,7 +87,7 @@ Clip Gain y Clip Peak conservan curvas separadas. No sumar ni fusionar automáti
 - El contrato de `projectTimeSamples` ya fue confirmado en el SDK fijado.
 - No existe aún interfaz propia para armar/desarmar; el controlador actual solo serializa estado.
 - El coordinador atómico existe, pero no está conectado al callback ni a un worker real.
-- El rechazo de una sesión no equivale a que el callback haya quedado quiescente: la integración debe esperar la garantía del host antes de drenar o liberar buffers.
+- El rechazo de una sesión no equivale a que el callback haya quedado quiescente: la integración debe esperar la garantía del host antes de drenar o liberar buffers. Los estados `RejectRequested` y `CancelDraining` impiden rearmar mientras esa limpieza siga pendiente; un fallo durante la preparación pasa también por `Draining`.
 - No hay límite de memoria de captura elegido y probado con duraciones reales.
 - No hay política implementada para captura cancelada, stop del host y restauración de sesión.
 
