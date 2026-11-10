@@ -162,7 +162,7 @@ PhraseProfileResult analyzePhraseProfiles(
 
         PhraseProfile profile;
         profile.range = region.range;
-        profile.levelDb = median(levelValues);
+        profile.rmsLevelDb = median(levelValues);
         profile.peakDb = median(peakValues);
         profile.meanAbsoluteDb = median(meanAbsoluteValues);
         profile.crestFactor = median(crestValues);
@@ -197,8 +197,8 @@ AdaptiveReferenceResult selectAdaptiveReference(
     eligibleLevels.reserve(profiles.size());
     for (const auto& profile : profiles) {
         if (profile.eligibleForReference &&
-            std::isfinite(profile.levelDb)) {
-            eligibleLevels.push_back(profile.levelDb);
+            std::isfinite(profile.rmsLevelDb)) {
+            eligibleLevels.push_back(profile.rmsLevelDb);
         }
     }
 
@@ -210,12 +210,12 @@ AdaptiveReferenceResult selectAdaptiveReference(
     }
 
     std::sort(eligibleLevels.begin(), eligibleLevels.end());
-    result.referenceDb = quantileOfSorted(eligibleLevels, config.quantile);
+    result.referenceRmsDb = quantileOfSorted(eligibleLevels, config.quantile);
 
     std::vector<double> deviations;
     deviations.reserve(eligibleLevels.size());
     for (const double level : eligibleLevels) {
-        deviations.push_back(std::abs(level - result.referenceDb));
+        deviations.push_back(std::abs(level - result.referenceRmsDb));
     }
     result.medianAbsoluteDeviationDb = median(std::move(deviations));
     result.status = AdaptiveReferenceStatus::Ready;
@@ -235,7 +235,7 @@ ClipGainRecommendationResult recommendClipGain(
     }
 
     if (reference.status != AdaptiveReferenceStatus::Ready ||
-        !std::isfinite(reference.referenceDb)) {
+        !std::isfinite(reference.referenceRmsDb)) {
         result.status = ClipGainRecommendationStatus::ReferenceUnavailable;
         return result;
     }
@@ -249,14 +249,14 @@ ClipGainRecommendationResult recommendClipGain(
 
         if (!profile.eligibleForReference ||
             profile.confidence < config.minimumConfidence ||
-            !std::isfinite(profile.levelDb)) {
+            !std::isfinite(profile.rmsLevelDb)) {
             recommendation.action = GainRecommendationAction::Abstain;
             result.recommendations.push_back(recommendation);
             continue;
         }
 
         const double relativeDifference =
-            reference.referenceDb - profile.levelDb;
+            reference.referenceRmsDb - profile.rmsLevelDb;
         recommendation.correctionDb = std::clamp(
             relativeDifference * config.correctionStrength,
             -config.maximumCutDb,
