@@ -25,7 +25,7 @@ jobs:
         run: cmake -S . -B build -DPGCLIP_BUILD_TESTS=ON -DPGCLIP_BUILD_VST3=ON
 
       - name: Build core and VST3
-        run: cmake --build build --config Release --parallel 2
+        run: cmake --build build --config Release --target PGClipGainPro pgclip_core_tests pgclip_fixture_tests pgclip_capture_tests pgclip_window_tests pgclip_snapshot_tests pgclip_context_tests --parallel 2
 
       - name: Run core tests
         run: ctest --test-dir build -C Release --output-on-failure
