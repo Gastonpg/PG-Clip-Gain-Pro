@@ -1,6 +1,7 @@
 #include "pgclip/core/capture_accumulator.hpp"
 
 #include <iostream>
+#include <limits>
 
 namespace {
 int failures = 0;
@@ -74,6 +75,20 @@ int main() {
     truncated.finish();
     check(truncated.descriptor().state == CaptureState::Partial,
           "do not mark early-stopped region complete");
+
+    CaptureAccumulator invalidBegin(AudioFormat{48000U, 1U}, 4U);
+    check(!invalidBegin.begin(0U, 0U),
+          "reject zero-length expected capture region");
+    check(invalidBegin.descriptor().state == CaptureState::Partial &&
+              !invalidBegin.descriptor().hasDiscontinuities,
+          "invalid capture request is not mislabeled as a timeline gap");
+
+    CaptureAccumulator overflowBegin(AudioFormat{48000U, 1U}, 4U);
+    check(!overflowBegin.begin(
+              std::numeric_limits<FrameIndex>::max() - 1U, 4U),
+          "reject expected region that overflows frame index");
+    check(!overflowBegin.descriptor().hasDiscontinuities,
+          "timeline overflow is not reported as an audio gap");
 
     CaptureAccumulator cancelled(AudioFormat{48000U, 1U}, 4U);
     check(cancelled.begin(0U, 4U), "begin cancellable capture");
