@@ -12,6 +12,8 @@ struct LinearGainPoint {
     double gainLinear{1.0};
 };
 
+struct GainCurveRuntimeResult;
+
 class GainCurveRuntime {
 public:
     const std::vector<LinearGainPoint>& points() const noexcept;
