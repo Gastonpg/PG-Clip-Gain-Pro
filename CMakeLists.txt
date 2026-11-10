@@ -9,6 +9,7 @@ add_library(pgclip_core STATIC
     src/core/capture_accumulator.cpp
     src/core/window_analysis.cpp
     src/core/shared_analysis_snapshot.cpp
+    src/core/window_context.cpp
 )
 target_include_directories(pgclip_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -42,4 +43,8 @@ if(PGCLIP_BUILD_TESTS)
     add_executable(pgclip_snapshot_tests tests/core/test_shared_analysis_snapshot.cpp)
     target_link_libraries(pgclip_snapshot_tests PRIVATE pgclip_core)
     add_test(NAME pgclip_snapshot_tests COMMAND pgclip_snapshot_tests)
+
+    add_executable(pgclip_context_tests tests/core/test_window_context.cpp)
+    target_link_libraries(pgclip_context_tests PRIVATE pgclip_core)
+    add_test(NAME pgclip_context_tests COMMAND pgclip_context_tests)
 endif()
