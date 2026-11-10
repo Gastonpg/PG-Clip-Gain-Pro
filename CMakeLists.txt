@@ -13,6 +13,7 @@ add_library(pgclip_core STATIC
     src/core/window_context.cpp
     src/core/spsc_audio_block_queue.cpp
     src/core/queued_capture_assembler.cpp
+    src/core/window_activity.cpp
 )
 target_include_directories(pgclip_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -60,6 +61,10 @@ if(PGCLIP_BUILD_TESTS)
     add_executable(pgclip_queued_capture_tests tests/core/test_queued_capture_assembler.cpp)
     target_link_libraries(pgclip_queued_capture_tests PRIVATE pgclip_core)
     add_test(NAME pgclip_queued_capture_tests COMMAND pgclip_queued_capture_tests)
+
+    add_executable(pgclip_activity_tests tests/core/test_window_activity.cpp)
+    target_link_libraries(pgclip_activity_tests PRIVATE pgclip_core)
+    add_test(NAME pgclip_activity_tests COMMAND pgclip_activity_tests)
 endif()
 
 if(PGCLIP_BUILD_VST3)
