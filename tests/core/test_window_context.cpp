@@ -88,6 +88,8 @@ int main() {
         check(context.channels[0].invalidWindows == 1U &&
                   context.channels[0].nonSilentWindows == 3U,
               "separate invalid evidence from valid windows");
+    } else {
+        check(false, "build mixed-validity snapshot");
     }
 
     if (failures != 0) {
