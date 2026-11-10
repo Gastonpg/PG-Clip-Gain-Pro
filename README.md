@@ -27,6 +27,7 @@ Plugin VST3 de edición vocal inteligente mediante curvas estáticas de Clip Gai
 10. [Revisión de base y puertas de implementación](docs/08_FOUNDATION_REVIEW_AND_IMPLEMENTATION_GATES.md)
 11. [Glosario y trazabilidad de requisitos](docs/09_GLOSSARY_AND_REQUIREMENTS_TRACEABILITY.md)
 12. [Contratos numéricos y modelo de datos DSP](docs/10_DSP_DATA_MODEL_AND_NUMERICAL_CONTRACTS.md)
+13. [Fixtures sintéticos y criterios de aceptación](docs/11_SYNTHETIC_FIXTURES_AND_ACCEPTANCE_CRITERIA.md)
 
 ## Motores
 
