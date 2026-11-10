@@ -8,15 +8,13 @@ Este documento transforma la filosofía del producto en un flujo de procesamient
 
 ## 1. Flujo general
 
-1. Leer la señal sin modificarla y conservar una copia de referencia.
-2. Analizar por bloques con solapamiento, manteniendo continuidad entre bloques.
-3. Calcular descriptores de actividad, envolvente, energía, sonoridad, transitorios y continuidad.
-4. Proponer regiones vocales y límites candidatos con una puntuación de confianza.
-5. Agrupar regiones en frases y conservar límites inciertos para revisión.
-6. Calcular estadísticas robustas por frase y por grupos de frases.
-7. Construir propuestas independientes de Clip Gain y Clip Peak.
-8. Ejecutar verificaciones de seguridad y evitar doble corrección.
-9. Presentar las curvas y sugerencias al usuario; no aplicar cambios irreversibles.
+1. Capturar los bloques entregados por el host durante la reproducción, sin modificar la señal, y validar continuidad y cobertura.
+2. Ejecutar la pasada 1: descriptores, actividad candidata, envolvente, energía, transitorios y continuidad.
+3. Ejecutar la pasada 2: refinar regiones, límites de frases, pausas, protecciones y perfiles robustos.
+4. Publicar un Shared Analysis Snapshot común, versionado e inmutable.
+5. Construir propuestas independientes de Clip Gain y Clip Peak desde el mismo snapshot.
+6. Ejecutar verificaciones de seguridad y evitar doble corrección.
+7. Presentar las curvas y sugerencias al usuario; no aplicar cambios irreversibles.
 
 ## 2. Análisis compartido en dos pasadas\n\nLa adquisición puede requerir reproducir la región para que el host entregue sus bloques. La captura se realiza en el recorrido de audio con operaciones acotadas; el análisis complejo se ejecuta después en un worker, fuera del hilo de audio. La pasada 1 produce el mapa descriptivo; la pasada 2 lo refina con contexto. La definición detallada está en `12_TWO_PASS_SHARED_ANALYSIS_PIPELINE.md`.
 
