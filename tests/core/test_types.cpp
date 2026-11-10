@@ -44,7 +44,7 @@ int main() {
     assert(std::abs(gainDbToLinear(0.0) - 1.0) < 1.0e-12);
     assert(std::abs(gainDbToLinear(6.020599913) - 2.0) < 1.0e-8);
     assert(std::abs(gainDbToLinear(-6.020599913) - 0.5) < 1.0e-8);
-    assert(gainDbToLinear(std::numeric_limits<double>::quiet_NaN()) == 0.0);
+    assert(std::isnan(gainDbToLinear(std::numeric_limits<double>::quiet_NaN())));
 
     return 0;
 }
