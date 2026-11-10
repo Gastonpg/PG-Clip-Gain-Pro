@@ -4,8 +4,10 @@
 #include "base/source/fstreamer.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <type_traits>
 
 namespace Steinberg {
 namespace Vst {
@@ -15,40 +17,49 @@ constexpr int32 kStateMagic = 0x50474350; // "PGCP"
 constexpr int32 kStateVersion = 1;
 
 template <typename Sample>
-void copyAudioBus(const AudioBusBuffers& input,
+Sample* outputChannel(AudioBusBuffers& bus, int32 channel) noexcept {
+    if constexpr (std::is_same_v<Sample, float>) {
+        return bus.channelBuffers32 ? bus.channelBuffers32[channel] : nullptr;
+    } else {
+        return bus.channelBuffers64 ? bus.channelBuffers64[channel] : nullptr;
+    }
+}
+
+template <typename Sample>
+const Sample* inputChannel(const AudioBusBuffers& bus, int32 channel) noexcept {
+    if constexpr (std::is_same_v<Sample, float>) {
+        return bus.channelBuffers32 ? bus.channelBuffers32[channel] : nullptr;
+    } else {
+        return bus.channelBuffers64 ? bus.channelBuffers64[channel] : nullptr;
+    }
+}
+
+template <typename Sample>
+bool copyAudioBus(const AudioBusBuffers& input,
                   AudioBusBuffers& output,
                   int32 channelCount,
                   int32 sampleCount) noexcept {
-    for (int32 channel = 0; channel < channelCount; ++channel) {
-        auto* destination = output.channelBuffers32
-            ? reinterpret_cast<Sample*>(output.channelBuffers32[channel])
-            : nullptr;
-        const auto* source = input.channelBuffers32
-            ? reinterpret_cast<const Sample*>(input.channelBuffers32[channel])
-            : nullptr;
+    const auto bytes = static_cast<std::size_t>(sampleCount) * sizeof(Sample);
 
-        if constexpr (sizeof(Sample) == sizeof(double)) {
-            destination = output.channelBuffers64
-                ? output.channelBuffers64[channel] : nullptr;
-            source = input.channelBuffers64
-                ? input.channelBuffers64[channel] : nullptr;
-        }
+    for (int32 channel = 0; channel < channelCount; ++channel) {
+        auto* destination = outputChannel<Sample>(output, channel);
+        const auto* source = inputChannel<Sample>(input, channel);
 
         if (destination == nullptr) {
-            continue;
+            return false;
         }
 
         const bool channelIsSilent =
             (input.silenceFlags & (static_cast<uint64>(1) << channel)) != 0U;
 
         if (channelIsSilent || source == nullptr) {
-            std::memset(destination, 0,
-                        static_cast<std::size_t>(sampleCount) * sizeof(Sample));
+            std::memset(destination, 0, bytes);
         } else if (destination != source) {
-            std::memcpy(destination, source,
-                        static_cast<std::size_t>(sampleCount) * sizeof(Sample));
+            std::memcpy(destination, source, bytes);
         }
     }
+
+    return true;
 }
 
 } // namespace
@@ -128,9 +139,13 @@ tresult PLUGIN_API PGClipGainProcessor::process(ProcessData& data) {
     output.silenceFlags = input.silenceFlags;
 
     if (data.symbolicSampleSize == kSample32) {
-        copyAudioBus<float>(input, output, input.numChannels, data.numSamples);
+        if (!copyAudioBus<float>(input, output, input.numChannels, data.numSamples)) {
+            return kResultFalse;
+        }
     } else if (data.symbolicSampleSize == kSample64) {
-        copyAudioBus<double>(input, output, input.numChannels, data.numSamples);
+        if (!copyAudioBus<double>(input, output, input.numChannels, data.numSamples)) {
+            return kResultFalse;
+        }
     } else {
         return kResultFalse;
     }
