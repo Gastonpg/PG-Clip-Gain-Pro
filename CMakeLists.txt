@@ -54,11 +54,12 @@ endif()
 if(PGCLIP_BUILD_VST3)
     include(FetchContent)
 
-    # Keep the SDK build lean: no example plug-ins, host examples or VSTGUI.
+    # Keep the SDK build lean: disable example plug-ins and VSTGUI; retain the official validator.
     set(SMTG_ENABLE_VSTGUI_SUPPORT OFF CACHE BOOL "" FORCE)
     set(SMTG_ENABLE_VST3_PLUGIN_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(SMTG_ENABLE_VST3_HOSTING_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(SMTG_CREATE_PLUGIN_LINK OFF CACHE BOOL "" FORCE)
+    set(SMTG_CREATE_BUNDLE_FOR_WINDOWS ON CACHE BOOL "" FORCE)
     set(SMTG_RUN_VST_VALIDATOR ON CACHE BOOL "" FORCE)
     set(SMTG_CREATE_MODULE_INFO ON CACHE BOOL "" FORCE)
 
