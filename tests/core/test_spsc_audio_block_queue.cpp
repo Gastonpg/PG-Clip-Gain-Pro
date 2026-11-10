@@ -133,6 +133,7 @@ int main() {
     constexpr std::uint64_t totalBlocks = 20000U;
     SpscAudioBlockQueue stressQueue(8U, 32U, 2U);
     std::atomic<bool> stressFailed{false};
+    std::atomic<bool> producerDone{false};
 
     std::thread producer([&]() {
         std::uint64_t sourceFrame = 0U;
@@ -166,6 +167,7 @@ int main() {
             }
             sourceFrame += frames;
         }
+        producerDone.store(true, std::memory_order_release);
     });
 
     std::thread consumer([&]() {
@@ -177,6 +179,10 @@ int main() {
             const auto result = stressQueue.tryPop(
                 destination.data(), destination.size(), current);
             if (result == AudioQueueResult::Empty) {
+                if (producerDone.load(std::memory_order_acquire)) {
+                    stressFailed.store(true, std::memory_order_relaxed);
+                    break;
+                }
                 std::this_thread::yield();
                 continue;
             }
