@@ -16,7 +16,7 @@ El artefacto de Windows se publica con el nombre `PG-Clip-Gain-Pro-VST3-windows-
 ## 2. Instalar
 
 1. Descargar y extraer el artefacto de Windows.
-2. Comprobar que contiene la carpeta completa `PG Clip Gain Pro.vst3`, no solamente la DLL interna.
+2. Comprobar que contiene la carpeta completa `PGClipGainPro.vst3`, no solamente la DLL interna.
 3. Copiar la carpeta completa a:
 
    `C:\Program Files\Common Files\VST3\`
