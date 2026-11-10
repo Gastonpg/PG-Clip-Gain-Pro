@@ -119,6 +119,11 @@ int main() {
     check(queue.tryPush(badBlock) == AudioQueueResult::InvalidBlock,
           "reject zero-frame blocks");
     badBlock = block;
+    const std::array<const void*, 2> missingChannel{nullptr, right.data()};
+    badBlock.channelData = missingChannel.data();
+    check(queue.tryPush(badBlock) == AudioQueueResult::InvalidBlock,
+          "reject missing pointer for a channel not marked silent");
+    badBlock = block;
     badBlock.sourceStartFrame = UINT64_MAX - 1U;
     check(queue.tryPush(badBlock) == AudioQueueResult::InvalidBlock,
           "reject source timeline overflow");
