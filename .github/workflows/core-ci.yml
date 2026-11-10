@@ -29,10 +29,12 @@ jobs:
       - name: Run core tests
         run: ctest --test-dir build -C Release --output-on-failure
 
-      - name: Stage VST3 bundle
+      - name: Stage Windows VST3 bundle
+        if: runner.os == 'Windows'
         run: cmake -E copy_directory build/VST3/Release/PGClipGainPro.vst3 artifact/PGClipGainPro.vst3
 
-      - name: Upload VST3 bundle
+      - name: Upload Windows VST3 bundle
+        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: PG-Clip-Gain-Pro-VST3-${{ matrix.os }}
