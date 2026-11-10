@@ -24,19 +24,21 @@
 
 ## 2. Pruebas del núcleo
 
-CMake define 10 ejecutables:
-1. contratos y validadores;
-2. fixtures PCM;
-3. captura acotada;
-4. descriptores por ventana;
-5. snapshot y cobertura;
-6. estadísticas contextuales;
-7. cola SPSC y orden concurrente (20.000 bloques);
-8. ensamblado de captura desde la cola;
-9. detector de actividad y abstención;
-10. perfiles, referencia adaptativa y recomendaciones Clip Gain.
+CMake define 12 ejecutables de prueba:
+1. contratos y validadores (`pgclip_core_tests`);
+2. fixtures PCM (`pgclip_fixture_tests`);
+3. captura acotada (`pgclip_capture_tests`);
+4. descriptores por ventana (`pgclip_window_tests`);
+5. snapshot y cobertura (`pgclip_snapshot_tests`);
+6. estadísticas contextuales (`pgclip_context_tests`);
+7. cola SPSC y orden concurrente (20.000 bloques; `pgclip_spsc_queue_tests`);
+8. ensamblado de captura desde la cola (`pgclip_queued_capture_tests`);
+9. detector de actividad y abstención (`pgclip_activity_tests`);
+10. perfiles, referencia adaptativa y recomendaciones Clip Gain (`pgclip_clip_gain_tests`);
+11. preparación y aplicación de curvas estáticas (`pgclip_gain_curve_tests`);
+12. detección y curvas candidatas de Clip Peak (`pgclip_clip_peak_tests`).
 
-La versión anterior de seis suites pasó localmente en Release y Debug con AddressSanitizer y UndefinedBehaviorSanitizer. Después se modificaron las suites de descriptores/snapshot y se añadieron cuatro suites nuevas. **Las 12 suites actuales deben ejecutarse de nuevo**; no se afirma que esta versión ampliada ya haya pasado.
+La versión anterior de seis suites pasó localmente en Release y Debug con AddressSanitizer y UndefinedBehaviorSanitizer. Después se modificaron las suites de descriptores/snapshot y se añadieron módulos y pruebas. **Las 12 suites actuales deben ejecutarse de nuevo**; no se afirma que esta versión ampliada ya haya pasado.
 
 ## 3. Primera integración VST3
 
@@ -80,7 +82,7 @@ La CI está configurada, pero no hay resultado remoto confirmado todavía. Un bu
 
 ## 6. Próximas etapas
 
-1. Conseguir compilación Windows x64 y Linux x64, 10/10 suites y Validator verde.
+1. Conseguir compilación Windows x64 y Linux x64, 12/12 suites y Validator verde.
 2. Instalar el artefacto Windows en FL Studio 2026 x64 y probar mono/estéreo, float32/float64, reproducción, duplicación de instancias y restauración de proyecto.
 3. Integrar callback VST3 → cola SPSC → worker, con ciclo de vida seguro y transporte del host.
 4. Resolver captura de regiones largas y estrategia de memoria/caché temporal.
@@ -88,7 +90,7 @@ La CI está configurada, pero no hay resultado remoto confirmado todavía. Un bu
 6. Validar actividad y segmentación con grabaciones vocales reales y anotación humana.
 7. Sustituir el proxy RMS por medición perceptual validada y calibrar la referencia adaptativa.
 8. Generar curvas Clip Gain estáticas, suaves, editables y aprobables por el usuario.
-9. Implementar Clip Peak como motor independiente.
+9. Consolidar y validar Clip Peak como motor independiente; ya existe un detector contextual y un generador de curvas candidatas, pero falta validación con señales más amplias y audio vocal real.
 10. Añadir persistencia, undo, GUI oscura y waveform real después de validar el DSP.
 
 Los cinco jueces de PG Audio Intelligence permanecen fuera de este alcance y no se implementarán sin autorización explícita.
