@@ -22,6 +22,7 @@ if(PGCLIP_BUILD_TESTS)
     enable_testing()
     add_executable(pgclip_core_tests
         tests/core/test_types.cpp
+        tests/fixtures/test_synthetic_signals.cpp
     )
     target_link_libraries(pgclip_core_tests PRIVATE pgclip_core)
     add_test(NAME pgclip_core_tests COMMAND pgclip_core_tests)
