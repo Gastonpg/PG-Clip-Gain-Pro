@@ -24,12 +24,13 @@
 - Generadores PCM deterministas en memoria para silencio, seno e impulso, con soporte mono/estéreo y canal derecho invertido para pruebas de polaridad.
 - Acumulador de captura por bloques con memoria preasignada, longitud esperada explícita, verificación de continuidad, detección de huecos/solapamientos, límite de capacidad y estados completo/parcial/cancelado.
 - Primera pasada numérica inicial: descriptores por ventana y por canal (RMS, pico de muestra, validez finita y silencio digital), con cobertura de cola parcial y sin sumar canales.
+- Primera pasada numérica inicial: descriptores por ventana y por canal (RMS, pico de muestra, validez finita y silencio digital), con cobertura de cola parcial y sin sumar canales.
 
 ## 3. Límites deliberados
 
 La primera versión admite únicamente mono y estéreo en el contrato inicial. No se mezclan canales para análisis sin una política explícita. No se fija todavía un máximo de ganancia, una ventana de análisis, un umbral de actividad ni una pendiente máxima de curva: esos parámetros requieren pruebas y escucha.
 
-Los validadores son defensas de entrada, no sustituyen las pruebas del algoritmo ni garantizan por sí solos calidad sonora. El analizador de ventanas opera offline sobre una vista PCM cuya memoria y longitud declara el llamador; no toca el hilo de audio ni realiza segmentación o decisiones musicales.
+Los validadores son defensas de entrada, no sustituyen las pruebas del algoritmo ni garantizan por sí solos calidad sonora. El analizador de ventanas opera offline sobre una vista PCM cuya memoria y longitud declara el llamador; no toca el hilo de audio ni realiza segmentación o decisiones musicales. El analizador de ventanas opera offline sobre una vista PCM cuya memoria y longitud declara el llamador; no toca el hilo de audio ni realiza segmentación o decisiones musicales.
 
 ## 4. Pruebas iniciales
 
