@@ -32,6 +32,8 @@ Plugin VST3 de edición vocal inteligente mediante curvas estáticas de Clip Gai
 15. [Informe de revisión cruzada de la base](docs/13_CROSS_DOCUMENT_REVIEW_REPORT.md)
 16. [Base de implementación y contratos iniciales](docs/14_IMPLEMENTATION_FOUNDATION.md)
 17. [Compilación e instalación VST3 en Windows](docs/15_BUILDING_AND_INSTALLING_VST3.md)
+18. [Plan de integración de captura VST3](docs/16_VST3_CAPTURE_INTEGRATION_PLAN.md)
+19. [Plan de conocimiento, entrenamiento y evaluación de los cinco jueces](docs/17_FIVE_JUDGES_TRAINING_AND_EVALUATION_PLAN.md)
 
 ## Motores
 
@@ -43,6 +45,6 @@ Detecta anomalías locales respecto del contexto y propone atenuaciones puntuale
 
 ## Estado y próximos pasos
 
-La documentación define la arquitectura y el protocolo para resolver parámetros mediante pruebas. La base host-independiente ya tiene pruebas locales; la siguiente fase es integrar captura con el ciclo de vida VST3 y completar descriptores/continuidad antes de implementar la segmentación contextual y los motores. La interfaz gráfica sigue postergada hasta validar el comportamiento DSP.
+La documentación define la arquitectura y el protocolo para resolver parámetros mediante pruebas. La base host-independiente tiene 12 suites configuradas, todavía pendientes de una ejecución completa confirmada. La siguiente fase es implementar el handshake seguro de captura VST3, conectar cola y worker, y validar el ciclo de transporte antes de aplicar curvas. La interfaz gráfica sigue postergada hasta validar el comportamiento DSP.
 
 Los cinco jueces de PG Audio Intelligence son una fase posterior y separada; no se integrarán sin autorización explícita del usuario.
