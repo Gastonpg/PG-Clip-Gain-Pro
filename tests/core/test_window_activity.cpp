@@ -61,7 +61,7 @@ int main() {
     const AudioFormat format{48000U, 1U};
     const AnalysisConfig analysisConfig{480U, 480U, 1U};
     const ActivityDetectionConfig detectorConfig{
-        12.0, 6.0, 0.2, 0.1, -120.0, 3.0, 1U, 2U
+        12.0, 6.0, 0.2, 3.0, 1U, 2U
     };
 
     std::vector<float> backgroundAndVoice(8U * 480U, 0.0F);
