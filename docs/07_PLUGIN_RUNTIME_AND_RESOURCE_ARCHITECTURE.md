@@ -51,9 +51,9 @@ La interfaz debe explicar cuándo necesita reproducir la región para completar 
 
 ### Política de almacenamiento
 
-La captura debe tener presupuesto de memoria. Para clips largos, usar almacenamiento temporal por bloques o análisis incremental con descriptores compactos. Si se necesita conservar audio para una segunda pasada, debe existir una política explícita de caché temporal, límite de tamaño, limpieza y recuperación ante cancelación. No escribir archivos temporales sin control ni guardar audio fuente dentro del estado persistente del plugin.
+La captura debe tener presupuesto de memoria. Para clips largos, usar almacenamiento temporal por bloques o análisis incremental con descriptores compactos. Si se necesita conservar audio para la segunda pasada, debe existir una política explícita de caché temporal, límite de tamaño, limpieza y recuperación ante cancelación. No escribir archivos temporales sin control ni guardar audio fuente dentro del estado persistente del plugin.
 
-La primera versión debe priorizar un flujo fiable y claro: iniciar captura, reproducir desde el inicio de la región, completar la pasada, y luego generar las curvas. La posibilidad de analizar sin reproducir dependerá de capacidades reales del host y no se prometerá de forma universal.
+La primera versión debe priorizar un flujo fiable y claro: iniciar captura, reproducir desde el inicio de la región, completar la cobertura, ejecutar las dos pasadas fuera del hilo de audio y luego generar las curvas. La posibilidad de analizar sin reproducir dependerá de capacidades reales del host y no se prometerá de forma universal.
 
 ## 3. Presupuesto para hardware modesto
 
