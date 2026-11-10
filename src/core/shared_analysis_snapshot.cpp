@@ -70,6 +70,17 @@ SnapshotBuildResult buildSharedAnalysisSnapshot(
         };
     }
 
+    if (analysis.config.windowFrames != config.windowFrames ||
+        analysis.config.hopFrames != config.hopFrames ||
+        analysis.config.version != config.version) {
+        return {
+            SnapshotBuildStatus::InvalidAnalysis,
+            {ValidationCode::InvalidWindow,
+             "Snapshot configuration does not match the configuration used for window analysis."},
+            {}
+        };
+    }
+
     if (analysis.format.sampleRate != capture.format.sampleRate ||
         analysis.format.channelCount != capture.format.channelCount ||
         analysis.totalFrames != capture.totalFrames ||
