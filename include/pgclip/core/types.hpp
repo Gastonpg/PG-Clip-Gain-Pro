@@ -71,13 +71,13 @@ struct GainCurve {
     std::vector<GainPoint> points;
 };
 
-ValidationIssue validate(const AudioFormat& format) noexcept;
+ValidationIssue validate(const AudioFormat& format);
 ValidationIssue validate(const FrameRange& range,
-                         FrameIndex totalFrames) noexcept;
-ValidationIssue validate(const CaptureDescriptor& capture) noexcept;
-ValidationIssue validate(const AnalysisConfig& config) noexcept;
-ValidationIssue validate(const GainCurve& curve) noexcept;
+                         FrameIndex totalFrames);
+ValidationIssue validate(const CaptureDescriptor& capture);
+ValidationIssue validate(const AnalysisConfig& config);
+ValidationIssue validate(const GainCurve& curve);
 
-double gainDbToLinear(double gainDb) noexcept;
+double gainDbToLinear(double gainDb);
 
 } // namespace pgclip
