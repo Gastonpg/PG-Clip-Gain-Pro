@@ -73,13 +73,16 @@ La creación o integración de los cinco jueces de PG Audio Intelligence es una 
 
 No iniciar esa fase sin autorización explícita del usuario. Los jueces no deben depender del hilo de audio ni reemplazar pruebas objetivas.
 
-## 7. Estado honesto
+## 7. Estado honesto — actualización de implementación
 
-A la fecha:
-- existe especificación y diseño documental;
-- no hay motor DSP implementado;
-- no se han ejecutado pruebas con señales ni voces;
-- no existe binario VST3 validado;
-- las decisiones numéricas siguen abiertas donde corresponde.
+La especificación original de este documento precede a la implementación actual. El estado vigente es:
+- existe una base DSP C++17 host-independiente con captura acotada, descriptores por ventana, snapshot compartido, estadísticas contextuales y detector energético conservador;
+- existen prototipos de perfiles/recomendaciones Clip Gain, preparación y aplicación de curvas estáticas, combinación de curvas y detección/generación de curvas candidatas Clip Peak;
+- existen 12 ejecutables de prueba configurados en CMake;
+- se corrigió una discrepancia de acceso friend en la API del preparador de curvas y se añadió rechazo explícito del underflow a ganancia lineal cero, con regresión dedicada;
+- la versión actual de las 12 suites todavía no tiene una ejecución completa confirmada;
+- el VST3 sigue siendo un shell transparente (passthrough): no captura audio del host ni conecta los motores DSP;
+- no existe todavía un binario VST3 validado ni una prueba de carga en FL Studio;
+- no hay validación con corpus vocal real; los parámetros perceptuales y musicales siguen abiertos.
 
-La siguiente etapa técnica es construir el núcleo DSP incrementalmente y medirlo. No declarar éxito antes de tener resultados.
+La siguiente etapa es completar la revisión estática, validar el código en Windows x64 y Linux x64 cuando se autorice la ejecución de CI, y después integrar el ciclo de captura/worker del VST3 sin bloquear el hilo de audio. No declarar éxito antes de tener resultados.
