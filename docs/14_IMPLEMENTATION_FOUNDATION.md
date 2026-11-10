@@ -35,7 +35,7 @@ Este shell demuestra la integración de API, factory, busses, tamaños de muestr
 
 ## 3. Compatibilidad objetivo
 
-La primera entrega objetivo es Windows x64 y VST3 para FL Studio de 64 bits. El SDK oficial declara soporte para Windows 10 x64 con MSVC 2019/2022. El equipo del usuario dispone de CPU x64; el build debe mantenerse eficiente y no depender de GPU.
+La primera entrega objetivo es Windows x64 y VST3 para FL Studio 2026 de 64 bits. El flujo de compilación se ejecuta en GitHub Actions con arquitectura x64 explícita, para que el usuario no dependa de instalar un toolchain completo en su PC. El SDK oficial declara soporte para Windows 10 x64 con MSVC 2019/2022. El build debe mantenerse eficiente y no depender de GPU.
 
 El paquete de Windows se genera como `PGClipGainPro.vst3`, con la estructura de bundle VST3 de Steinberg. El nombre visible dentro del DAW sigue siendo `PG Clip Gain Pro`. La CI compila además en Linux como plataforma secundaria. La salida Linux no sustituye al binario Windows que necesita FL Studio en el equipo del usuario.
 
