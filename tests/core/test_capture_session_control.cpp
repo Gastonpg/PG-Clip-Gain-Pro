@@ -83,6 +83,19 @@ int main() {
     check(session.state() == CaptureSessionState::Rejected,
           "rejection is terminal only after cleanup");
     check(session.requestArm(), "cleaned rejected session can be retried");
+    check(session.state() == CaptureSessionState::ArmRequested,
+          "new preparation remains unpublished until worker confirmation");
+    session.reject();
+    check(session.state() == CaptureSessionState::RejectRequested,
+          "runtime failure can cancel an in-progress preparation");
+    check(!session.completeArm(true),
+          "worker cannot publish Armed after preparation was rejected");
+    check(session.acknowledgeProducerQuiesced(),
+          "preparation rejection is acknowledged after producer cannot start");
+    check(session.completeDrain(false),
+          "worker cleans partially prepared resources");
+    check(session.state() == CaptureSessionState::Rejected,
+          "preparation-time rejection becomes reusable only after cleanup");
 
     if (failures != 0) {
         std::cerr << failures << " capture session control test(s) failed.\\n";
