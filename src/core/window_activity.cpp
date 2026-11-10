@@ -129,7 +129,8 @@ ActivityDetectionResult detectWindowActivity(
         quantileOfSorted(nonSilentLevels, config.lowerQuantile);
 
     const double contrast =
-        nonSilentLevels.back() - nonSilentLevels.front();
+        quantileOfSorted(nonSilentLevels, 0.8) -
+        quantileOfSorted(nonSilentLevels, 0.2);
     if (contrast < config.minimumContrastDb) {
         result.status = ActivityDetectionStatus::InsufficientContrast;
         for (auto& window : result.windows) {
