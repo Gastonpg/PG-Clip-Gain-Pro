@@ -16,7 +16,9 @@ Este documento transforma la filosofía del producto en un flujo de procesamient
 6. Ejecutar verificaciones de seguridad y evitar doble corrección.
 7. Presentar las curvas y sugerencias al usuario; no aplicar cambios irreversibles.
 
-## 2. Análisis compartido en dos pasadas\n\nLa adquisición puede requerir reproducir la región para que el host entregue sus bloques. La captura se realiza en el recorrido de audio con operaciones acotadas; el análisis complejo se ejecuta después en un worker, fuera del hilo de audio. La pasada 1 produce el mapa descriptivo; la pasada 2 lo refina con contexto. La definición detallada está en `12_TWO_PASS_SHARED_ANALYSIS_PIPELINE.md`.
+## 2. Análisis compartido en dos pasadas
+
+La adquisición puede requerir reproducir la región para que el host entregue sus bloques. La captura se realiza en el recorrido de audio mediante operaciones acotadas; el análisis complejo se ejecuta después en un worker, fuera del hilo de audio. La pasada 1 produce el mapa descriptivo; la pasada 2 lo refina con contexto. La definición detallada está en `12_TWO_PASS_SHARED_ANALYSIS_PIPELINE.md`.
 
 ### 2.1 Preparación de señal
 
