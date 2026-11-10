@@ -71,6 +71,18 @@ int main() {
                   result.events.size() >= 3U,
               "detect contextual isolated peak anomalies");
 
+        bool eventsStayInsideActiveVoice = true;
+        for (const auto& event : result.events) {
+            const auto windowIndex = static_cast<std::size_t>(
+                event.range.start / analysisConfig.hopFrames);
+            if (windowIndex >= activity.windows.size() ||
+                activity.windows[windowIndex].state != WindowActivityState::Active) {
+                eventsStayInsideActiveVoice = false;
+            }
+        }
+        check(eventsStayInsideActiveVoice,
+              "ignore isolated peaks outside detected vocal activity");
+
         bool onsetReviewed = false;
         bool interiorAttenuated = false;
         bool tailReviewed = false;
