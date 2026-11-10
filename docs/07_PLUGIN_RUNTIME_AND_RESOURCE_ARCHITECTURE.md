@@ -27,15 +27,14 @@ Usar snapshots inmutables, colas acotadas o mecanismos lock-free apropiados. Evi
 ## 2. Flujo propuesto
 
 1. El host entrega audio según VST3.
-2. El plugin obtiene acceso seguro a la fuente o representación de análisis, sin modificarla.
-3. Una acción explícita inicia análisis offline.
-4. El worker analiza por bloques y publica progreso.
-5. Shared Analysis genera datos versionados.
-6. Clip Gain y Clip Peak generan curvas separadas.
-7. Safety / Coordination evalúa interacción.
-8. La UI recibe snapshot y representa waveform, regiones y curvas.
-9. El usuario revisa, edita, acepta o rechaza.
-10. El hilo de audio consume una versión aprobada mediante intercambio seguro y acotado.
+2. Una acción explícita inicia la captura de análisis; el usuario reproduce la región desde el inicio cuando el host no ofrece otra vía documentada.
+3. El recorrido de audio copia bloques a una cola o búfer preasignado y acotado, sin análisis pesado, disco ni bloqueos.
+4. Al completar la cobertura, un worker fuera del hilo de audio ejecuta las dos pasadas compartidas y publica progreso.
+5. Clip Gain y Clip Peak generan curvas separadas desde el mismo snapshot.
+6. Safety / Coordination evalúa la interacción.
+7. La UI recibe un snapshot coherente y representa waveform, regiones y curvas.
+8. El usuario revisa, edita, acepta o rechaza.
+9. El hilo de audio consume una versión aprobada mediante intercambio seguro y acotado.
 
 Definir durante integración el comportamiento frente a cambios de buffer, transporte, render offline, suspensión y restauración VST3.
 
