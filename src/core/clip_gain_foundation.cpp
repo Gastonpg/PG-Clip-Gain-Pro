@@ -40,7 +40,7 @@ ValidationIssue validate(const ClipGainRecommendationConfig& config) {
         !std::isfinite(config.minimumConfidence) ||
         config.minimumConfidence < 0.0 ||
         config.minimumConfidence > 1.0) {
-        return {ValidationCode::InvalidGain,
+        return {ValidationCode::InvalidWindow,
                 "Clip Gain correction strength, limits, or confidence are invalid."};
     }
     return {};
