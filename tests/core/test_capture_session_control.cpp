@@ -6,7 +6,7 @@ namespace {
 int failures = 0;
 void check(bool condition, const char* message) {
     if (!condition) {
-        std::cerr << "FAIL: " << message << '\n';
+        std::cerr << "FAIL: " << message << '\\n';
         ++failures;
     }
 }
@@ -42,27 +42,46 @@ int main() {
     check(session.state() == CaptureSessionState::Rejected,
           "failed preparation rejects session");
 
-    check(session.requestArm(), "rejected session can be retried");
+    check(session.requestArm(), "rejected preparation can be retried");
     check(session.completeArm(true), "prepare second session");
     check(session.requestCancel(), "request cancellation while armed");
     check(!session.shouldCapture(), "cancel request disables further capture");
     check(session.acknowledgeProducerQuiesced(),
           "cancellation waits for producer quiescence");
+    check(session.state() == CaptureSessionState::CancelDraining,
+          "cancellation still requires worker cleanup");
+    check(!session.requestArm(),
+          "cannot reuse session before cancellation cleanup");
+    check(session.completeDrain(false),
+          "worker confirms cancellation cleanup");
     check(session.state() == CaptureSessionState::Cancelled,
           "cancelled session reaches terminal state");
     check(!session.completeDrain(true),
           "cancelled session cannot be published as captured");
 
-    check(session.requestArm(), "cancelled session can be armed again");
+    check(session.requestArm(), "cancelled and cleaned session can be armed again");
     session.reject();
+    check(session.state() == CaptureSessionState::RejectRequested,
+          "runtime fault requests rejection without publishing terminal state");
+    check(!session.shouldCapture(), "rejected request stops accepting blocks");
+    check(!session.requestArm(),
+          "cannot rearm while callback quiescence is pending");
+    check(session.acknowledgeProducerQuiesced(),
+          "faulted producer must become quiescent");
+    check(session.state() == CaptureSessionState::Draining,
+          "faulted session enters worker cleanup after quiescence");
+    check(!session.requestArm(),
+          "cannot rearm while worker drains rejected session");
+    check(session.completeDrain(false),
+          "worker completes rejected-session cleanup");
     check(session.state() == CaptureSessionState::Rejected,
-          "runtime discontinuity rejects active capture");
-    check(!session.shouldCapture(), "rejected session stops accepting blocks");
+          "rejection is terminal only after cleanup");
+    check(session.requestArm(), "cleaned rejected session can be retried");
 
     if (failures != 0) {
-        std::cerr << failures << " capture session control test(s) failed.\n";
+        std::cerr << failures << " capture session control test(s) failed.\\n";
         return 1;
     }
-    std::cout << "All capture session control tests passed.\n";
+    std::cout << "All capture session control tests passed.\\n";
     return 0;
 }
