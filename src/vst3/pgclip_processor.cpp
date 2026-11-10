@@ -2,7 +2,7 @@
 #include "pgclip_cids.h"
 
 #include "base/source/fstreamer.h"
-#include "pluginterfaces/vst/ivstparameterchanges.h"
+#include "pluginterfaces/base/ustring.h"
 
 #include <cstddef>
 #include <cstdint>
