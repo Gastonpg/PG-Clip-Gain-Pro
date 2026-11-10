@@ -31,8 +31,9 @@ public:
                FrameIndex sourceStartFrame,
                FrameIndex expectedFrameCount) noexcept;
     QueueDrainStatus drainOne(SpscAudioBlockQueue& queue) noexcept;
-    void finish(SpscAudioBlockQueue& queue) noexcept;
-    void finishAtCapturedLength(SpscAudioBlockQueue& queue) noexcept;
+    // Stop the producer first; finalization succeeds only after the queue drains.
+    bool finish(SpscAudioBlockQueue& queue) noexcept;
+    bool finishAtCapturedLength(SpscAudioBlockQueue& queue) noexcept;
     void cancel() noexcept;
 
     CaptureDescriptor descriptor() const noexcept;
