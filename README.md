@@ -25,6 +25,7 @@ Plugin VST3 de edición vocal inteligente mediante curvas estáticas de Clip Gai
 8. [Protocolo de validación DSP y escucha](docs/06_VALIDATION_AND_TEST_PROTOCOL.md)
 9. [Arquitectura de ejecución y recursos](docs/07_PLUGIN_RUNTIME_AND_RESOURCE_ARCHITECTURE.md)
 10. [Revisión de base y puertas de implementación](docs/08_FOUNDATION_REVIEW_AND_IMPLEMENTATION_GATES.md)
+11. [Glosario y trazabilidad de requisitos](docs/09_GLOSSARY_AND_REQUIREMENTS_TRACEABILITY.md)
 
 ## Motores
 
