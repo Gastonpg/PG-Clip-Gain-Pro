@@ -153,6 +153,12 @@ No fijar tamaños de ventana, umbrales, límites de ganancia ni porcentajes defi
 5. Conectar las propuestas relativas con el generador de curvas Clip Gain.
 6. Recién después, evaluar el comportamiento conjunto con Clip Peak y el sistema de jueces.
 
+## Nota de referencia sobre estándares de loudness
+
+Las recomendaciones EBU R 128 y las métricas ITU-R BS.1770 son referencias útiles para comprender medición perceptual, gating y descriptores de loudness. Sin embargo, R 128 define normalización de loudness de programas completos para contextos de distribución/broadcast; su objetivo de programa no es una consigna para nivelar cada frase vocal de este plugin. PG Clip Gain Pro no adopta -23 LUFS ni ningún otro target absoluto. Solo reutilizará conceptos de medición cuando aporten valor, y deberá validar sus descriptores en voz aislada y en frases cortas, donde el contexto y la duración son diferentes.
+
+Referencia oficial: EBU R 128, versión 5.0 (noviembre de 2023): https://tech.ebu.ch/publications/r128. La recomendación y sus suplementos describen el marco de medición de programas, no una receta automática de Clip Gain por frase.
+
 ## 12. Decisiones pendientes
 
 - Ventanas y solapamiento apropiados para diferentes duraciones de frase.
