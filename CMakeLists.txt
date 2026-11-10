@@ -88,7 +88,7 @@ if(PGCLIP_BUILD_VST3)
         src/vst3/version.h
     )
 
-    smtg_add_vst3plugin(PGClipGainPro PACKAGE_NAME "PG Clip Gain Pro" SOURCES_LIST ${PGCLIP_VST3_SOURCES})
+    smtg_add_vst3plugin(PGClipGainPro ${PGCLIP_VST3_SOURCES})
     smtg_target_configure_version_file(PGClipGainPro)
 
     target_compile_features(PGClipGainPro PRIVATE cxx_std_17)
