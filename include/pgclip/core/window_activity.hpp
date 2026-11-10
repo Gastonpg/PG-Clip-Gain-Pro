@@ -39,6 +39,14 @@ struct WindowActivity {
     WindowActivityState state{WindowActivityState::Invalid};
 };
 
+struct ActivityRegionCandidate {
+    FrameRange range{};
+    std::uint32_t activeWindows{0};
+    std::uint32_t bridgedPauseWindows{0};
+    double confidence{0.0};
+    bool containsBridgedPause{false};
+};
+
 struct ActivityDetectionResult {
     ActivityDetectionStatus status{ActivityDetectionStatus::InvalidConfiguration};
     ValidationIssue issue{};
@@ -49,6 +57,7 @@ struct ActivityDetectionResult {
     std::uint64_t invalidWindows{0};
     std::uint64_t silentWindows{0};
     std::vector<WindowActivity> windows;
+    std::vector<ActivityRegionCandidate> regions;
 };
 
 // Produces conservative window-level activity candidates only.
