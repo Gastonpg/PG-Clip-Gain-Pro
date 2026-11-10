@@ -24,7 +24,7 @@ int main() {
         GainPoint{102U, 6.0},
         GainPoint{104U, 0.0}
     }};
-    const auto runtime = prepareGainCurveRuntime(curve);
+    const auto runtime = prepareGainCurveRuntime(curve, GainCurveRuntimeConfig{6.0, 6.0});
     check(runtime.status == GainCurveRuntimeStatus::Ready &&
               runtime.runtime.points().size() == 3U,
           "prepare immutable linear-gain runtime outside the callback");
@@ -111,7 +111,7 @@ int main() {
           "reject combined curve points outside the capture timeline");
 
     const GainCurve emptyCurve{};
-    const auto emptyRuntime = prepareGainCurveRuntime(emptyCurve);
+    const auto emptyRuntime = prepareGainCurveRuntime(emptyCurve, GainCurveRuntimeConfig{0.0, 0.0});
     std::array<float, 2> unchanged{0.25F, -0.25F};
     const std::array<void*, 1> unchangedChannels{unchanged.data()};
     const auto emptyStatus = applyGainCurveToBlock(
@@ -126,9 +126,17 @@ int main() {
           "leave audio untouched when no curve exists");
 
     const GainCurve singlePoint{{GainPoint{0U, 3.0}}};
-    check(prepareGainCurveRuntime(singlePoint).status ==
+    check(prepareGainCurveRuntime(singlePoint, GainCurveRuntimeConfig{6.0, 6.0}).status ==
               GainCurveRuntimeStatus::InvalidCurve,
           "reject one-point runtime curve");
+
+    const GainCurve excessiveCurve{{
+        GainPoint{0U, 0.0}, GainPoint{4U, 24.0}
+    }};
+    check(prepareGainCurveRuntime(
+              excessiveCurve, GainCurveRuntimeConfig{6.0, 6.0}).status ==
+              GainCurveRuntimeStatus::InvalidCurve,
+          "reject runtime curves above the configured gain safety ceiling");
 
     const auto invalidPointerStatus = applyGainCurveToBlock(
         MutableAudioBlockView{nullptr, 0U, 2U, 1U,
