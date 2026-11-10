@@ -2,6 +2,7 @@
 #include "pgclip/core/synthetic_signals.hpp"
 
 #include <iostream>
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -69,7 +70,13 @@ int main() {
         check(rejectedGap.status == SnapshotBuildStatus::IncompleteCapture,
               "reject discontinuous capture for global snapshot");
 
+        const auto wrongConfig = buildSharedAnalysisSnapshot(
+            complete, AnalysisConfig{64U, 64U, 1U}, analysis);
+        check(wrongConfig.status == SnapshotBuildStatus::InvalidAnalysis,
+              "reject snapshot config that differs from analysis config");
+
         auto incompleteAnalysis = analysis;
+        incompleteAnalysis.windows.pop_back();
         incompleteAnalysis.windows.pop_back();
         const auto rejectedCoverage =
             buildSharedAnalysisSnapshot(complete, config,
