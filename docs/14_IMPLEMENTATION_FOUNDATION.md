@@ -15,7 +15,7 @@
 - Estadísticas contextuales descriptivas con mediana, MAD y rangos.
 - Cola SPSC acotada y preasignada para transferir bloques de audio del callback al worker: índices atómicos de 64 bits, sin locks ni asignaciones en push/pop, soporte de entrada float32/float64 (copia de análisis float32), flags de silencio, metadatos temporales y contador de bloques descartados por saturación.
 - Ensamblador del lado del worker que consume la cola, reconstruye audio intercalado, verifica continuidad temporal y distingue captura completa, parcial, cancelada o discontinua. Requiere que el llamador vacíe la cola antes de iniciar una sesión nueva. La finalización solo se acepta cuando el productor está detenido y la cola quedó vacía; también puede cerrar una región definida explícitamente por el usuario. Cualquier bloque descartado por saturación invalida la continuidad.
-- Las seis suites originales fueron aprobadas localmente en Release y Debug con AddressSanitizer y UndefinedBehaviorSanitizer. Se agregaron dos suites: estrés SPSC con 20.000 bloques y ensamblado de captura desde la cola; además se ampliaron las pruebas existentes de descriptores y snapshots. Los cambios nuevos quedan pendientes de ejecución en CI.
+- La versión anterior de esta base pasó 6/6 suites localmente en Release y Debug con AddressSanitizer y UndefinedBehaviorSanitizer. Después se ampliaron los descriptores/snapshots y se agregaron dos suites: estrés SPSC con 20.000 bloques y ensamblado de captura desde la cola. Por esos cambios, las 8 suites del código actual deben reejecutarse; no se afirma que la versión actual ya haya pasado.
 
 ## 2. Primera integración VST3
 
