@@ -18,7 +18,7 @@
 ## 2. Primera integración VST3
 
 - SDK oficial Steinberg VST3 3.8.1 fijado al commit `3cdf9ca5d1f5b1b21e0a86832aa4abe55607bd96`, con submódulos recursivos.
-- SDK integrado mediante CMake FetchContent; VSTGUI y ejemplos ajenos al producto desactivados para mantener el build reducido.
+- SDK integrado mediante CMake FetchContent; VSTGUI y plugins de ejemplo desactivados para mantener el build reducido. Se conserva el Validator oficial y la generación de moduleinfo.
 - Procesador y controlador son componentes separados, enlazados por IDs de clase propios.
 - Bus principal mono/estéreo; el procesador rechaza configuraciones no soportadas.
 - Soporte de bloques de audio de 32 y 64 bits.
@@ -26,6 +26,8 @@
 - Estado del componente con cabecera mágica y versión explícita.
 - Sin asignaciones, análisis, bloqueos ni operaciones de disco en el callback de procesamiento.
 - El SDK Validator y la generación de `moduleinfo.json` quedan activados en la configuración de CMake.
+
+Se incluye el aviso MIT oficial del SDK en `third_party/licenses/STEINBERG_VST3_SDK_LICENSE.txt` para acompañar las distribuciones que incorporen el código enlazado.
 
 Este shell demuestra la integración de API, factory, busses, tamaños de muestra, estado y ruta de procesamiento. No implementa todavía editor gráfico, parámetros de usuario, captura de análisis, curva de ganancia ni motores Clip Gain/Clip Peak.
 
