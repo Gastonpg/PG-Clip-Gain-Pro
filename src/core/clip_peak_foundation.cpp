@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
+#include <utility>
 #include <vector>
 
 namespace pgclip {
@@ -89,13 +91,13 @@ ClipPeakResult detectClipPeakEvents(
     const auto channelCount =
         static_cast<std::size_t>(snapshot.format().channelCount);
     const FrameIndex windowFrames = snapshot.config().windowFrames;
-    const FrameIndex radius =
+    const FrameIndex edgeWindowCount =
         static_cast<FrameIndex>(config.protectPhraseEdgeWindows);
     const FrameIndex edgeSpan =
-        radius > 0U &&
-        windowFrames > std::numeric_limits<FrameIndex>::max() / radius
+        edgeWindowCount > 0U &&
+        windowFrames > std::numeric_limits<FrameIndex>::max() / edgeWindowCount
             ? snapshot.totalFrames()
-            : windowFrames * radius;
+            : windowFrames * edgeWindowCount;
 
     struct WindowPeak {
         bool valid{false};
@@ -153,11 +155,11 @@ ClipPeakResult detectClipPeakEvents(
             continue;
         }
 
-        const auto radius = static_cast<std::size_t>(
+        const auto contextRadius = static_cast<std::size_t>(
             config.localRadiusWindows);
-        const auto first = index > radius ? index - radius : 0U;
+        const auto first = index > contextRadius ? index - contextRadius : 0U;
         const auto last = std::min(
-            peaks.size() - 1U, index + radius);
+            peaks.size() - 1U, index + contextRadius);
 
         std::vector<double> localPeaks;
         localPeaks.reserve(last - first);
