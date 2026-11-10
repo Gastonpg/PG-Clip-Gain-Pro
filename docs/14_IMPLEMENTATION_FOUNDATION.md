@@ -13,7 +13,8 @@
 - Descriptores iniciales RMS/pico por ventana y canal.
 - Snapshot compartido inmutable con comprobación de formato, configuración y cobertura.
 - Estadísticas contextuales descriptivas con mediana, MAD y rangos.
-- Seis suites de pruebas; 6/6 aprobadas localmente en Release y 6/6 en Debug con AddressSanitizer y UndefinedBehaviorSanitizer.
+- Cola SPSC acotada y preasignada para transferir bloques de audio del callback al worker: índices atómicos de 64 bits, sin locks ni asignaciones en push/pop, soporte de entrada float32/float64 (copia de análisis float32), flags de silencio, metadatos temporales y contador de bloques descartados por saturación.
+- Seis suites anteriores aprobadas localmente en Release y Debug con AddressSanitizer y UndefinedBehaviorSanitizer. Se agregó una séptima suite de concurrencia SPSC con 20.000 bloques y casos de cola llena, tamaños, silencio y conversión float64; queda pendiente de ejecución en CI.
 
 ## 2. Primera integración VST3
 
@@ -51,6 +52,7 @@ Un resultado verde de CI no reemplaza la prueba manual dentro de FL Studio.
 ## 5. Límites actuales
 
 - El VST3 aún no tiene interfaz gráfica.
+- La cola SPSC ya está implementada y probada por diseño unitario, pero todavía no está conectada al callback real del VST3 ni a un worker de análisis.
 - No captura una región completa del DAW.
 - No integra todavía una cola SPSC ni coordinación callback/worker.
 - No implementa la segunda pasada contextual ni segmentación vocal.
