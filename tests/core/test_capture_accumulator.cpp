@@ -17,7 +17,7 @@ int main() {
     using namespace pgclip;
 
     CaptureAccumulator capture(AudioFormat{48000U, 2U}, 8U);
-    capture.begin(1000U);
+    check(capture.begin(1000U, 4U), "begin capture with expected length");
 
     const float firstBlock[] = {0.1F, -0.1F, 0.2F, -0.2F};
     const float secondBlock[] = {0.3F, -0.3F, 0.4F, -0.4F};
@@ -41,7 +41,7 @@ int main() {
           "reject blocks after finish");
 
     CaptureAccumulator gap(AudioFormat{48000U, 1U}, 16U);
-    gap.begin(0U);
+    check(gap.begin(0U, 8U), "begin gap capture");
     const float monoBlock[] = {0.1F, 0.2F};
     check(gap.append(4U, monoBlock, 2U) == CaptureAppendResult::GapDetected,
           "detect missing initial frames");
@@ -50,7 +50,7 @@ int main() {
           "mark gap as discontinuous");
 
     CaptureAccumulator overlap(AudioFormat{48000U, 1U}, 16U);
-    overlap.begin(20U);
+    check(overlap.begin(20U, 8U), "begin overlap capture");
     check(overlap.append(20U, monoBlock, 2U) == CaptureAppendResult::Accepted,
           "accept initial block before overlap test");
     check(overlap.append(21U, monoBlock, 2U) ==
@@ -58,7 +58,7 @@ int main() {
           "detect overlapping or repeated block");
 
     CaptureAccumulator bounded(AudioFormat{48000U, 1U}, 2U);
-    bounded.begin(0U);
+    check(bounded.begin(0U, 2U), "begin bounded capture");
     check(bounded.append(0U, monoBlock, 2U) == CaptureAppendResult::Accepted,
           "fill bounded capture exactly");
     check(bounded.append(2U, monoBlock, 1U) ==
@@ -67,8 +67,16 @@ int main() {
     check(bounded.descriptor().state == CaptureState::Partial,
           "capacity overflow leaves partial capture");
 
+    CaptureAccumulator truncated(AudioFormat{48000U, 1U}, 8U);
+    check(truncated.begin(0U, 8U), "begin capture that may be truncated");
+    check(truncated.append(0U, monoBlock, 2U) == CaptureAppendResult::Accepted,
+          "accept partial block before early stop");
+    truncated.finish();
+    check(truncated.descriptor().state == CaptureState::Partial,
+          "do not mark early-stopped region complete");
+
     CaptureAccumulator cancelled(AudioFormat{48000U, 1U}, 4U);
-    cancelled.begin(0U);
+    check(cancelled.begin(0U, 4U), "begin cancellable capture");
     cancelled.cancel();
     check(cancelled.descriptor().state == CaptureState::Cancelled,
           "record cancellation state");
