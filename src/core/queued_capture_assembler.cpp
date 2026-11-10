@@ -45,6 +45,7 @@ QueueDrainStatus QueuedCaptureAssembler::drainOne(
         return QueueDrainStatus::QueueEmpty;
     }
     if (queueResult != AudioQueueResult::Success) {
+        accumulator_.finish();
         return QueueDrainStatus::QueueError;
     }
 
@@ -58,6 +59,7 @@ QueueDrainStatus QueuedCaptureAssembler::drainOne(
         info.sourceStartFrame, scratch_.data(), info.frameCount);
 
     if (appendResult != CaptureAppendResult::Accepted) {
+        accumulator_.finish();
         return QueueDrainStatus::CaptureRejected;
     }
 
