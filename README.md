@@ -2,7 +2,7 @@
 
 Plugin VST3 de edición vocal inteligente mediante curvas estáticas de Clip Gain. El objetivo es mejorar la consistencia de nivel sin borrar la interpretación ni recurrir a compresión, limitación o saturación.
 
-> Estado actual: núcleo C++17 y shell VST3 de compatibilidad transparente integrados. La versión anterior del núcleo pasó 6/6 suites localmente en Release y Debug con sanitizadores. Desde entonces se ampliaron descriptores/snapshots y se añadieron seis suites nuevas: SPSC, ensamblado de captura, actividad por ventanas, base Clip Gain, aplicación de curvas y Clip Peak con curvas de atenuación y coordinador de seguridad de ganancia combinada; las 12 suites del código actual deben revalidarse. El shell VST3 está configurado para compilarse y pasar el Validator de Steinberg en CI para Windows x64 y Linux x64, pero todavía no hay resultado remoto confirmado ni prueba en FL Studio. Falta integrar la captura al transporte real del DAW, conectar los prototipos de ambos motores al VST3, completar la segunda pasada perceptual/fonética y construir la GUI.
+> Estado actual: núcleo C++17 y shell VST3 de compatibilidad transparente integrados. La versión anterior del núcleo pasó 6/6 suites localmente en Release y Debug con sanitizadores. Desde entonces se ampliaron descriptores/snapshots y se añadieron seis suites nuevas: SPSC, ensamblado de captura, actividad por ventanas, base Clip Gain, aplicación de curvas y Clip Peak con curvas de atenuación y coordinador de seguridad de ganancia combinada; las 13 suites del código actual deben revalidarse. El shell VST3 está configurado para compilarse y pasar el Validator de Steinberg en CI para Windows x64 y Linux x64, pero todavía no hay resultado remoto confirmado ni prueba en FL Studio. Falta integrar la captura al transporte real del DAW, conectar los prototipos de ambos motores al VST3, completar la segunda pasada perceptual/fonética y construir la GUI.
 
 ## Filosofía del producto
 
@@ -45,6 +45,6 @@ Detecta anomalías locales respecto del contexto y propone atenuaciones puntuale
 
 ## Estado y próximos pasos
 
-La documentación define la arquitectura y el protocolo para resolver parámetros mediante pruebas. La base host-independiente tiene 12 suites configuradas, todavía pendientes de una ejecución completa confirmada. La siguiente fase es implementar el handshake seguro de captura VST3, conectar cola y worker, y validar el ciclo de transporte antes de aplicar curvas. La interfaz gráfica sigue postergada hasta validar el comportamiento DSP.
+La documentación define la arquitectura y el protocolo para resolver parámetros mediante pruebas. La base host-independiente tiene 13 suites configuradas, todavía pendientes de una ejecución completa confirmada. La siguiente fase es implementar el handshake seguro de captura VST3, conectar cola y worker, y validar el ciclo de transporte antes de aplicar curvas. La interfaz gráfica sigue postergada hasta validar el comportamiento DSP.
 
 Los cinco jueces de PG Audio Intelligence son una fase posterior y separada; no se integrarán sin autorización explícita del usuario.
