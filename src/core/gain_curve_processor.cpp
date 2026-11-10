@@ -46,6 +46,34 @@ GainCurveRuntimeResult prepareGainCurveRuntime(const GainCurve& curve) {
 
 namespace {
 
+double evaluateCurveLinear(const GainCurve& curve, FrameIndex frame) {
+    if (curve.points.empty() || frame < curve.points.front().frame ||
+        frame > curve.points.back().frame) {
+        return 1.0;
+    }
+
+    std::size_t segment = 0U;
+    while (segment + 1U < curve.points.size() &&
+           frame > curve.points[segment + 1U].frame) {
+        ++segment;
+    }
+
+    if (segment + 1U >= curve.points.size()) {
+        return gainDbToLinear(curve.points.back().gainDb);
+    }
+
+    const auto& start = curve.points[segment];
+    const auto& end = curve.points[segment + 1U];
+    const double position =
+        static_cast<double>(frame - start.frame) /
+        static_cast<double>(end.frame - start.frame);
+    const double smooth = position * position *
+                          (3.0 - 2.0 * position);
+    const double startGain = gainDbToLinear(start.gainDb);
+    const double endGain = gainDbToLinear(end.gainDb);
+    return startGain + (endGain - startGain) * smooth;
+}
+
 bool validBlock(const MutableAudioBlockView& block) noexcept {
     if (block.frameCount == 0U) {
         return true;
@@ -133,6 +161,101 @@ void applyTyped(const MutableAudioBlockView& block,
 }
 
 } // namespace
+
+CurveCombinationResult combineStaticGainCurves(
+    const GainCurve& clipGainCurve,
+    const GainCurve& clipPeakCurve,
+    FrameIndex totalFrames,
+    const CurveCombinationConfig& config) {
+    CurveCombinationResult result;
+
+    if (totalFrames == 0U ||
+        !std::isfinite(config.maximumCombinedBoostDb) ||
+        config.maximumCombinedBoostDb < 0.0 ||
+        !std::isfinite(config.maximumCombinedCutDb) ||
+        config.maximumCombinedCutDb < 0.0) {
+        result.status = CurveCombinationStatus::InvalidConfiguration;
+        result.issue = {ValidationCode::InvalidWindow,
+                        "Combined curve limits and capture length are invalid."};
+        return result;
+    }
+
+    const auto validateInput = [totalFrames](const GainCurve& curve) {
+        if (const auto issue = validate(curve)) {
+            return issue;
+        }
+        if (!curve.points.empty() && curve.points.size() < 2U) {
+            return ValidationIssue{
+                ValidationCode::UnorderedCurvePoints,
+                "A non-empty source curve requires at least two points."
+            };
+        }
+        for (const auto& point : curve.points) {
+            if (point.frame > totalFrames) {
+                return ValidationIssue{
+                    ValidationCode::RangeOutsideCapture,
+                    "A source curve point extends beyond the capture timeline."
+                };
+            }
+        }
+        return ValidationIssue{};
+    };
+
+    if (const auto issue = validateInput(clipGainCurve)) {
+        result.status = CurveCombinationStatus::InvalidInputCurve;
+        result.issue = issue;
+        return result;
+    }
+    if (const auto issue = validateInput(clipPeakCurve)) {
+        result.status = CurveCombinationStatus::InvalidInputCurve;
+        result.issue = issue;
+        return result;
+    }
+
+    std::vector<FrameIndex> frames;
+    frames.reserve(clipGainCurve.points.size() +
+                   clipPeakCurve.points.size());
+    for (const auto& point : clipGainCurve.points) {
+        frames.push_back(point.frame);
+    }
+    for (const auto& point : clipPeakCurve.points) {
+        frames.push_back(point.frame);
+    }
+
+    std::sort(frames.begin(), frames.end());
+    frames.erase(std::unique(frames.begin(), frames.end()), frames.end());
+
+    result.curve.points.reserve(frames.size());
+    for (const FrameIndex frame : frames) {
+        const double clipGain = evaluateCurveLinear(clipGainCurve, frame);
+        const double clipPeak = evaluateCurveLinear(clipPeakCurve, frame);
+        const double combinedLinear = clipGain * clipPeak;
+
+        if (!std::isfinite(combinedLinear) || combinedLinear <= 0.0) {
+            result.curve.points.clear();
+            result.status = CurveCombinationStatus::InvalidInputCurve;
+            result.issue = {ValidationCode::NonFiniteGain,
+                            "Combined linear gain is not representable."};
+            return result;
+        }
+
+        const double combinedDb = std::clamp(
+            20.0 * std::log10(combinedLinear),
+            -config.maximumCombinedCutDb,
+            config.maximumCombinedBoostDb);
+        result.curve.points.push_back({frame, combinedDb});
+    }
+
+    if (const auto issue = validate(result.curve)) {
+        result.curve.points.clear();
+        result.status = CurveCombinationStatus::InvalidInputCurve;
+        result.issue = issue;
+        return result;
+    }
+
+    result.status = CurveCombinationStatus::Ready;
+    return result;
+}
 
 GainCurveApplyStatus applyGainCurveToBlock(
     const MutableAudioBlockView& block,
