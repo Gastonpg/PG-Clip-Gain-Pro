@@ -1,6 +1,7 @@
 name: Core and VST3 CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
