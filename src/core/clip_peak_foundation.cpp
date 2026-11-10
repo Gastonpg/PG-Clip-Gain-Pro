@@ -147,8 +147,6 @@ ClipPeakResult detectClipPeakEvents(
         peaks[index].crestFactor = crest;
     }
 
-    const FrameIndex totalFrames = snapshot.totalFrames();
-
     for (std::size_t index = 0U; index < peaks.size(); ++index) {
         const auto& candidate = peaks[index];
         if (!candidate.valid || candidate.silent) {
