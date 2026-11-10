@@ -15,7 +15,7 @@ struct PhraseProfileConfig {
 
 struct PhraseProfile {
     FrameRange range{};
-    double levelDb{0.0};
+    double rmsLevelDb{0.0}; // RMS energy proxy, not final perceived loudness.
     double peakDb{0.0};
     double meanAbsoluteDb{0.0};
     double crestFactor{0.0};
@@ -55,7 +55,7 @@ enum class AdaptiveReferenceStatus {
 struct AdaptiveReferenceResult {
     AdaptiveReferenceStatus status{AdaptiveReferenceStatus::InvalidConfiguration};
     ValidationIssue issue{};
-    double referenceDb{0.0};
+    double referenceRmsDb{0.0}; // Adaptive reference in RMS-proxy dB.
     double medianAbsoluteDeviationDb{0.0};
     std::uint32_t eligiblePhraseCount{0};
 };
