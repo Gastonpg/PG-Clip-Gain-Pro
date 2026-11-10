@@ -297,4 +297,110 @@ ClipGainRecommendationResult recommendClipGain(
     return result;
 }
 
+
+ClipGainCurveResult buildClipGainCurve(
+    const std::vector<PhraseGainRecommendation>& recommendations,
+    FrameIndex totalFrames,
+    const ClipGainCurveConfig& config) {
+    ClipGainCurveResult result;
+
+    if (totalFrames == 0U ||
+        config.rampInFrames == 0U ||
+        config.rampOutFrames == 0U) {
+        result.status = ClipGainCurveStatus::InvalidConfiguration;
+        result.issue = {ValidationCode::InvalidWindow,
+                        "Curve generation requires a non-empty capture and positive ramp lengths."};
+        return result;
+    }
+
+    std::vector<const PhraseGainRecommendation*> adjustments;
+    adjustments.reserve(recommendations.size());
+
+    for (const auto& recommendation : recommendations) {
+        if (recommendation.action != GainRecommendationAction::Adjust) {
+            continue;
+        }
+
+        if (validate(recommendation.range, totalFrames) ||
+            !std::isfinite(recommendation.correctionDb) ||
+            !std::isfinite(recommendation.confidence) ||
+            recommendation.confidence < 0.0 ||
+            recommendation.confidence > 1.0) {
+            result.status = ClipGainCurveStatus::InvalidRecommendations;
+            result.issue = {ValidationCode::RangeOutsideCapture,
+                            "A gain recommendation has an invalid range, gain, or confidence."};
+            return result;
+        }
+
+        adjustments.push_back(&recommendation);
+    }
+
+    std::sort(adjustments.begin(), adjustments.end(),
+              [](const auto* left, const auto* right) {
+                  return left->range.start < right->range.start;
+              });
+
+    for (std::size_t index = 1U; index < adjustments.size(); ++index) {
+        if (adjustments[index]->range.start <
+            adjustments[index - 1U]->range.end) {
+            result.status = ClipGainCurveStatus::OverlappingRegions;
+            result.issue = {ValidationCode::UnorderedCurvePoints,
+                            "Overlapping phrase recommendations cannot be merged safely."};
+            return result;
+        }
+    }
+
+    const auto appendPoint = [&result](FrameIndex frame, double gainDb) {
+        if (!result.curve.points.empty() &&
+            result.curve.points.back().frame == frame) {
+            return std::abs(result.curve.points.back().gainDb - gainDb) < 1.0e-9;
+        }
+        result.curve.points.push_back({frame, gainDb});
+        return true;
+    };
+
+    for (const auto* recommendation : adjustments) {
+        const FrameIndex duration =
+            recommendation->range.end - recommendation->range.start;
+        if (duration < 2U) {
+            result.status = ClipGainCurveStatus::InvalidRecommendations;
+            result.issue = {ValidationCode::EmptyRange,
+                            "A phrase needs at least two frames for a non-zero ramp."};
+            result.curve.points.clear();
+            return result;
+        }
+
+        const FrameIndex halfDuration = duration / 2U;
+        const FrameIndex rampIn =
+            std::min(config.rampInFrames, halfDuration);
+        const FrameIndex rampOut =
+            std::min(config.rampOutFrames, duration - rampIn);
+
+        const FrameIndex peakStart = recommendation->range.start + rampIn;
+        const FrameIndex peakEnd = recommendation->range.end - rampOut;
+
+        if (!appendPoint(recommendation->range.start, 0.0) ||
+            !appendPoint(peakStart, recommendation->correctionDb) ||
+            (peakEnd > peakStart &&
+             !appendPoint(peakEnd, recommendation->correctionDb)) ||
+            !appendPoint(recommendation->range.end, 0.0)) {
+            result.status = ClipGainCurveStatus::InvalidRecommendations;
+            result.issue = {ValidationCode::DuplicateCurvePoint,
+                            "Curve points collide with incompatible gain values."};
+            result.curve.points.clear();
+            return result;
+        }
+    }
+
+    if (const auto issue = validate(result.curve)) {
+        result.status = ClipGainCurveStatus::InvalidRecommendations;
+        result.issue = issue;
+        result.curve.points.clear();
+        return result;
+    }
+
+    result.status = ClipGainCurveStatus::Ready;
+    return result;
+}
+
 } // namespace pgclip
