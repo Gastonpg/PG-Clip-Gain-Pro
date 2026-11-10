@@ -3,6 +3,9 @@
 #include <atomic>
 #include <cstdint>
 
+static_assert(std::atomic<std::uint8_t>::is_always_lock_free,
+              "Capture session state requires lock-free byte atomics.");
+
 namespace pgclip {
 
 enum class CaptureSessionState : std::uint8_t {
