@@ -22,7 +22,7 @@ int main() {
     SpscAudioBlockQueue queue(4U, 4U, 2U);
     QueuedCaptureAssembler assembler(format, 8U, 4U);
 
-    check(assembler.begin(100U, 6U),
+    check(assembler.begin(queue, 100U, 6U),
           "begin worker-side capture assembly");
 
     std::array<float, 2> leftA{0.1F, 0.2F};
@@ -65,7 +65,7 @@ int main() {
 
     SpscAudioBlockQueue gapQueue(4U, 4U, 2U);
     QueuedCaptureAssembler gapAssembler(format, 8U, 4U);
-    check(gapAssembler.begin(200U, 6U), "begin discontinuity fixture");
+    check(gapAssembler.begin(gapQueue, 200U, 6U), "begin discontinuity fixture");
     check(gapQueue.tryPush(AudioBlockView{
               channelsA.data(), 200U, 2U, 2U,
               AudioSampleFormat::Float32, 0U
@@ -88,7 +88,7 @@ int main() {
 
     SpscAudioBlockQueue partialQueue(4U, 4U, 2U);
     QueuedCaptureAssembler partialAssembler(format, 8U, 4U);
-    check(partialAssembler.begin(300U, 6U), "begin partial fixture");
+    check(partialAssembler.begin(partialQueue, 300U, 6U), "begin partial fixture");
     check(partialQueue.tryPush(AudioBlockView{
               channelsA.data(), 300U, 2U, 2U,
               AudioSampleFormat::Float32, 0U
@@ -97,13 +97,13 @@ int main() {
     check(partialAssembler.drainOne(partialQueue) ==
               QueueDrainStatus::BlockAccepted,
           "drain incomplete capture prefix");
-    partialAssembler.finish();
+    partialAssembler.finish(partialQueue);
     check(partialAssembler.descriptor().state == CaptureState::Partial,
           "finish incomplete region as partial, never complete");
 
     SpscAudioBlockQueue undersizedQueue(4U, 4U, 2U);
     QueuedCaptureAssembler undersizedAssembler(format, 8U, 2U);
-    check(undersizedAssembler.begin(400U, 4U),
+    check(undersizedAssembler.begin(undersizedQueue, 400U, 4U),
           "begin capture with deliberately undersized worker scratch");
     const std::array<float, 4> longLeft{0.1F, 0.2F, 0.3F, 0.4F};
     const std::array<float, 4> longRight{0.5F, 0.6F, 0.7F, 0.8F};
@@ -123,7 +123,7 @@ int main() {
 
     SpscAudioBlockQueue wrongChannelQueue(4U, 4U, 2U);
     QueuedCaptureAssembler wrongChannelAssembler(format, 8U, 4U);
-    check(wrongChannelAssembler.begin(500U, 2U),
+    check(wrongChannelAssembler.begin(wrongChannelQueue, 500U, 2U),
           "begin wrong-channel capture fixture");
     const std::array<const void*, 1> monoChannel{leftA.data()};
     check(wrongChannelQueue.tryPush(AudioBlockView{
@@ -135,6 +135,47 @@ int main() {
               QueueDrainStatus::CaptureRejected &&
               wrongChannelAssembler.descriptor().state == CaptureState::Cancelled,
           "cancel capture when queued channel layout does not match");
+
+    SpscAudioBlockQueue userDefinedQueue(4U, 4U, 2U);
+    QueuedCaptureAssembler userDefinedAssembler(format, 8U, 4U);
+    check(userDefinedAssembler.begin(userDefinedQueue, 600U, 8U),
+          "begin capture with maximum region capacity");
+    check(userDefinedQueue.tryPush(AudioBlockView{
+              channelsA.data(), 600U, 2U, 2U,
+              AudioSampleFormat::Float32, 0U
+          }) == AudioQueueResult::Success,
+          "enqueue user-defined region content");
+    check(userDefinedAssembler.drainOne(userDefinedQueue) ==
+              QueueDrainStatus::BlockAccepted,
+          "drain user-defined region content");
+    userDefinedAssembler.finishAtCapturedLength(userDefinedQueue);
+    check(userDefinedAssembler.descriptor().state == CaptureState::Complete &&
+              userDefinedAssembler.descriptor().totalFrames == 2U,
+          "accept explicit user stop as the exact captured region boundary");
+
+    SpscAudioBlockQueue overflowQueue(2U, 4U, 2U);
+    QueuedCaptureAssembler overflowAssembler(format, 8U, 4U);
+    check(overflowAssembler.begin(overflowQueue, 700U, 8U),
+          "begin queue overflow fixture");
+    check(overflowQueue.tryPush(AudioBlockView{
+              channelsA.data(), 700U, 2U, 2U,
+              AudioSampleFormat::Float32, 0U
+          }) == AudioQueueResult::Success,
+          "enqueue first block before overflow");
+    check(overflowQueue.tryPush(AudioBlockView{
+              channelsA.data(), 702U, 2U, 2U,
+              AudioSampleFormat::Float32, 0U
+          }) == AudioQueueResult::Success,
+          "fill bounded queue before overflow");
+    check(overflowQueue.tryPush(AudioBlockView{
+              channelsA.data(), 704U, 2U, 2U,
+              AudioSampleFormat::Float32, 0U
+          }) == AudioQueueResult::Full,
+          "force callback-side queue overflow");
+    check(overflowAssembler.drainOne(overflowQueue) ==
+              QueueDrainStatus::CaptureRejected &&
+              overflowAssembler.descriptor().state == CaptureState::Discontinuous,
+          "never publish capture as complete after a dropped callback block");
 
     if (failures != 0) {
         std::cerr << failures << " queued capture test(s) failed.\n";
