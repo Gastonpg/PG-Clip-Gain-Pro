@@ -36,11 +36,33 @@ tresult PLUGIN_API PGClipGainController::setComponentState(IBStream* state) {
         ? kResultOk : kResultFalse;
 }
 
-tresult PLUGIN_API PGClipGainController::setState(IBStream*) {
-    return kResultOk;
+tresult PLUGIN_API PGClipGainController::setState(IBStream* state) {
+    if (state == nullptr) {
+        return kResultFalse;
+    }
+
+    IBStreamer streamer(state, kLittleEndian);
+    int32 magic = 0;
+    int32 version = 0;
+
+    if (!streamer.readInt32(magic) || !streamer.readInt32(version)) {
+        return kResultFalse;
+    }
+
+    return magic == kStateMagic && version == kStateVersion
+        ? kResultOk : kResultFalse;
 }
 
-tresult PLUGIN_API PGClipGainController::getState(IBStream*) {
+tresult PLUGIN_API PGClipGainController::getState(IBStream* state) {
+    if (state == nullptr) {
+        return kResultFalse;
+    }
+
+    IBStreamer streamer(state, kLittleEndian);
+    if (!streamer.writeInt32(kStateMagic) ||
+        !streamer.writeInt32(kStateVersion)) {
+        return kResultFalse;
+    }
     return kResultOk;
 }
 
