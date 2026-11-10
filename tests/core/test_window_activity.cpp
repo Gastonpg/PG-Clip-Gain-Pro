@@ -109,6 +109,23 @@ int main() {
         check(false, "build short-pause fixture snapshot");
     }
 
+    std::vector<float> singleTransient(8U * 480U, 0.0F);
+    addSine(singleTransient, 0U, singleTransient.size(),
+            0.001, 1000.0, 48000.0);
+    addSine(singleTransient, 4U * 480U, 480U,
+            0.1, 750.0, 48000.0);
+    const auto transientSnapshot = makeSnapshot(
+        singleTransient, format, analysisConfig);
+    if (transientSnapshot.snapshot) {
+        const auto result = detectWindowActivity(
+            *transientSnapshot.snapshot, detectorConfig);
+        check(result.status == ActivityDetectionStatus::InsufficientContrast &&
+                  result.windows[4U].state == WindowActivityState::Uncertain,
+              "abstain on one isolated energy spike instead of declaring a phrase");
+    } else {
+        check(false, "build isolated transient fixture snapshot");
+    }
+
     std::vector<float> uniformVoice(4U * 480U, 0.0F);
     addSine(uniformVoice, 0U, uniformVoice.size(),
             0.1, 750.0, 48000.0);
