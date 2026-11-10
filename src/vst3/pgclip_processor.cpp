@@ -54,6 +54,10 @@ bool copyAudioBus(const AudioBusBuffers& input,
 
         if (channelIsSilent || source == nullptr) {
             std::memset(destination, 0, bytes);
+            if (source == nullptr) {
+                output.silenceFlags |=
+                    (static_cast<uint64>(1) << channel);
+            }
         } else if (destination != source) {
             std::memcpy(destination, source, bytes);
         }
@@ -75,8 +79,10 @@ tresult PLUGIN_API PGClipGainProcessor::initialize(FUnknown* context) {
     }
 
     setControllerClass(PGClipGainControllerUID);
-    addAudioInput(STR16("Audio In"), SpeakerArr::kStereo);
-    addAudioOutput(STR16("Audio Out"), SpeakerArr::kStereo);
+    if (addAudioInput(STR16("Audio In"), SpeakerArr::kStereo) == nullptr ||
+        addAudioOutput(STR16("Audio Out"), SpeakerArr::kStereo) == nullptr) {
+        return kResultFalse;
+    }
     return kResultOk;
 }
 
