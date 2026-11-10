@@ -104,4 +104,29 @@ ClipGainRecommendationResult recommendClipGain(
     const AdaptiveReferenceResult& reference,
     const ClipGainRecommendationConfig& config);
 
+struct ClipGainCurveConfig {
+    FrameIndex rampInFrames{0};
+    FrameIndex rampOutFrames{0};
+};
+
+enum class ClipGainCurveStatus {
+    Ready,
+    InvalidConfiguration,
+    InvalidRecommendations,
+    OverlappingRegions
+};
+
+struct ClipGainCurveResult {
+    ClipGainCurveStatus status{ClipGainCurveStatus::InvalidConfiguration};
+    ValidationIssue issue{};
+    GainCurve curve{};
+};
+
+// Builds a static, editable gain curve from approved phrase recommendations.
+// Ramps return to 0 dB between phrases; no dynamic compression is performed.
+ClipGainCurveResult buildClipGainCurve(
+    const std::vector<PhraseGainRecommendation>& recommendations,
+    FrameIndex totalFrames,
+    const ClipGainCurveConfig& config);
+
 } // namespace pgclip
