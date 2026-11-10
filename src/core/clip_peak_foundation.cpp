@@ -149,7 +149,8 @@ ClipPeakResult detectClipPeakEvents(
 
     for (std::size_t index = 0U; index < peaks.size(); ++index) {
         const auto& candidate = peaks[index];
-        if (!candidate.valid || candidate.silent) {
+        if (!candidate.valid || candidate.silent ||
+            activity.windows[index].state != WindowActivityState::Active) {
             continue;
         }
 
@@ -163,7 +164,8 @@ ClipPeakResult detectClipPeakEvents(
         localPeaks.reserve(last - first);
         for (std::size_t neighbor = first; neighbor <= last; ++neighbor) {
             if (neighbor == index || !peaks[neighbor].valid ||
-                peaks[neighbor].silent) {
+                peaks[neighbor].silent ||
+                activity.windows[neighbor].state != WindowActivityState::Active) {
                 continue;
             }
             localPeaks.push_back(peaks[neighbor].peakDb);
@@ -176,7 +178,7 @@ ClipPeakResult detectClipPeakEvents(
         const double localMedian = median(std::move(localPeaks));
         const double excess = candidate.peakDb - localMedian;
 
-        if (excess < config.peakExcessThresholdDb ||
+        if (excess <= config.peakExcessThresholdDb ||
             candidate.crestFactor < config.minimumCrestFactor) {
             continue;
         }
