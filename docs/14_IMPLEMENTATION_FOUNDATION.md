@@ -25,6 +25,7 @@
 - Acumulador de captura por bloques con memoria preasignada, longitud esperada explícita, verificación de continuidad, detección de huecos/solapamientos, límite de capacidad y estados completo/parcial/cancelado.
 - Primera pasada numérica inicial: descriptores por ventana y por canal (RMS, pico de muestra, validez finita y silencio digital), con cobertura de cola parcial y sin sumar canales.
 - Constructor de snapshot compartido e inmutable: exige captura completa/continua, cobertura total, coincidencia de formato y configuración, y métricas coherentes. Conserva ventanas inválidas marcadas para que los motores puedan abstenerse localmente.
+- Constructor de snapshot compartido e inmutable: exige captura completa/continua, cobertura total, coincidencia de formato y configuración, y métricas coherentes. Conserva ventanas inválidas marcadas para que los motores puedan abstenerse localmente.
 - Primera pasada numérica inicial: descriptores por ventana y por canal (RMS, pico de muestra, validez finita y silencio digital), con cobertura de cola parcial y sin sumar canales.
 
 ## 3. Límites deliberados
