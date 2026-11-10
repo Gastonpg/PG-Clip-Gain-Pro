@@ -36,6 +36,7 @@ struct WindowAnalysisResult {
     std::vector<WindowDescriptor> windows;
     AudioFormat format{};
     FrameIndex totalFrames{0};
+    AnalysisConfig config{};
 };
 
 ValidationIssue validate(const AudioBufferView& audio);
