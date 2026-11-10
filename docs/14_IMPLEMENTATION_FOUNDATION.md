@@ -1,6 +1,6 @@
 # PG Clip Gain Pro — Base de implementación v0.3
 
-**Estado:** núcleo DSP C++17 y primer módulo VST3 real integrados en el proyecto. Las seis suites del núcleo ya pasaron localmente en Release y Debug con AddressSanitizer/UndefinedBehaviorSanitizer. La compilación y validación del módulo VST3 están configuradas en CI para Windows y Linux, pero aún no hay resultado remoto confirmado.
+**Estado:** núcleo DSP C++17 y primer módulo VST3 real integrados en el proyecto. La versión anterior del núcleo pasó 6/6 suites localmente en Release y Debug con AddressSanitizer/UndefinedBehaviorSanitizer; las ampliaciones actuales elevan el banco a 8 suites y requieren revalidación. La compilación y validación VST3 están configuradas en CI para Windows x64 y Linux x64, pero aún no hay resultado remoto confirmado.
 **Importante:** el módulo VST3 actual es un shell de compatibilidad transparente (passthrough), no el producto DSP terminado. No se declara todavía compatible con FL Studio hasta ejecutar la validación del SDK y probar el binario en el DAW.
 
 ## 1. Núcleo DSP host-independiente
@@ -55,7 +55,7 @@ Un resultado verde de CI no reemplaza la prueba manual dentro de FL Studio.
 - El VST3 aún no tiene interfaz gráfica.
 - La cola SPSC y el ensamblador de captura están implementados como módulos host-independientes, pero todavía no están conectados al callback real del VST3 ni a un hilo worker de análisis.
 - No captura una región completa del DAW.
-- No integra todavía una cola SPSC ni coordinación callback/worker.
+- No hay todavía coordinación real entre el callback del VST3 y un hilo worker; la cola y el ensamblador solo están probados como módulos host-independientes.
 - No implementa la segunda pasada contextual ni segmentación vocal.
 - No implementa referencia adaptativa.
 - No implementa curvas Clip Gain ni Clip Peak.
