@@ -1,4 +1,4 @@
-name: Core CI
+name: Core and VST3 CI
 
 on:
   push:
@@ -10,17 +10,30 @@ on:
       - main
 
 jobs:
-  build-and-test:
+  build-test-and-plugin:
+    name: Build, test and VST3 (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout project
+        uses: actions/checkout@v4
+
       - name: Configure
-        run: cmake -S . -B build -DPGCLIP_BUILD_TESTS=ON
-      - name: Build
-        run: cmake --build build --config Release
-      - name: Test
+        run: cmake -S . -B build -DPGCLIP_BUILD_TESTS=ON -DPGCLIP_BUILD_VST3=ON
+
+      - name: Build core and VST3
+        run: cmake --build build --config Release --parallel 2
+
+      - name: Run core tests
         run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Upload VST3 bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: PG-Clip-Gain-Pro-VST3-${{ matrix.os }}
+          path: build/**/*.vst3
+          if-no-files-found: error
+          retention-days: 14
