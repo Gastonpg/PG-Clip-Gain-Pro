@@ -86,7 +86,8 @@ Clip Gain y Clip Peak conservan curvas separadas. No sumar ni fusionar automáti
 
 - El contrato de `projectTimeSamples` ya fue confirmado en el SDK fijado.
 - No existe aún interfaz propia para armar/desarmar; el controlador actual solo serializa estado.
-- El coordinador atómico existe, pero no está conectado al callback ni a un worker real.\n- El rechazo de una sesión no equivale a que el callback haya quedado quiescente: la integración debe esperar la garantía del host antes de drenar o liberar buffers.
+- El coordinador atómico existe, pero no está conectado al callback ni a un worker real.
+- El rechazo de una sesión no equivale a que el callback haya quedado quiescente: la integración debe esperar la garantía del host antes de drenar o liberar buffers.
 - No hay límite de memoria de captura elegido y probado con duraciones reales.
 - No hay política implementada para captura cancelada, stop del host y restauración de sesión.
 
