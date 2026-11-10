@@ -1,6 +1,6 @@
 # PG Clip Gain Pro — Base de implementación v0.1
 
-**Estado:** primer esqueleto de código creado; todavía pendiente de compilación y ejecución local.
+**Estado:** primer esqueleto de código creado y compilado localmente con CMake/GCC; pruebas iniciales aprobadas en configuración Release.
 **Alcance:** contratos de dominio independientes del host VST3. No contiene todavía captura de audio, análisis de dos pasadas, segmentación ni motores Clip Gain/Clip Peak.
 
 ## 1. Decisión de implementación
@@ -30,11 +30,11 @@ Los validadores son defensas de entrada, no sustituyen las pruebas del algoritmo
 
 ## 4. Pruebas iniciales
 
-tests/core/test_types.cpp contiene pruebas deterministas para formatos, rangos temporales, estados de captura, configuración de análisis, integridad de curvas y conversión de ganancia.
+tests/core/test_types.cpp contiene comprobaciones deterministas activas también en Release para formatos, rangos temporales, estados de captura, configuración de análisis, integridad de curvas y conversión de ganancia. La ejecución local terminó con 1/1 pruebas aprobadas.
 
 ## 5. Próximas etapas
 
-1. Compilar este núcleo en Windows y Linux.
+1. Verificar la compilación automatizada en Windows y Linux; la compilación local en Linux ya pasó.
 2. Ampliar pruebas de límites, overflow y datos inválidos.
 3. Implementar fixtures PCM deterministas y métricas de referencia.
 4. Diseñar el acumulador de captura por bloques con detección de huecos, solapamientos y cambios de posición.
