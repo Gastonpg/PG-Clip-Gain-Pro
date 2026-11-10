@@ -157,7 +157,8 @@ std::uint64_t SpscAudioBlockQueue::droppedBlocks() const noexcept {
 std::uint64_t SpscAudioBlockQueue::queuedBlocks() const noexcept {
     const auto write = writeIndex_.load(std::memory_order_acquire);
     const auto read = readIndex_.load(std::memory_order_acquire);
-    return write - read;
+    const auto count = write - read;
+    return count <= slotCount_ ? count : 0U;
 }
 
 std::size_t SpscAudioBlockQueue::requiredSamplesPerSlot() const noexcept {
