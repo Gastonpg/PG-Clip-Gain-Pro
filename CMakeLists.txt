@@ -61,7 +61,7 @@ if(PGCLIP_BUILD_VST3)
 
     FetchContent_Declare(vst3sdk
         GIT_REPOSITORY https://github.com/steinbergmedia/vst3sdk.git
-        GIT_TAG v3.8.1
+        GIT_TAG 3cdf9ca5d1f5b1b21e0a86832aa4abe55607bd96
         GIT_SUBMODULES_RECURSE TRUE
         GIT_SHALLOW FALSE
     )
