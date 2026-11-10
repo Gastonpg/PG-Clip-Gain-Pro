@@ -36,7 +36,7 @@ int main() {
         const std::array<void*, 1> monoChannels{monoSamples.data()};
         const auto status = applyGainCurveToBlock(
             MutableAudioBlockView{
-                const_cast<void* const*>(monoChannels.data()),
+                monoChannels.data(),
                 98U, 8U, 1U, AudioSampleFormat::Float32
             },
             runtime.runtime);
@@ -57,7 +57,7 @@ int main() {
         };
         const auto stereoStatus = applyGainCurveToBlock(
             MutableAudioBlockView{
-                const_cast<void* const*>(stereoChannels.data()),
+                stereoChannels.data(),
                 101U, 2U, 2U, AudioSampleFormat::Float64
             },
             runtime.runtime);
@@ -72,7 +72,7 @@ int main() {
     const std::array<void*, 1> unchangedChannels{unchanged.data()};
     const auto emptyStatus = applyGainCurveToBlock(
         MutableAudioBlockView{
-            const_cast<void* const*>(unchangedChannels.data()),
+            unchangedChannels.data(),
             0U, 2U, 1U, AudioSampleFormat::Float32
         },
         emptyRuntime.runtime);
@@ -97,7 +97,7 @@ int main() {
     const std::array<void*, 1> overflowChannels{overflowSamples.data()};
     const auto overflowStatus = applyGainCurveToBlock(
         MutableAudioBlockView{
-            const_cast<void* const*>(overflowChannels.data()),
+            overflowChannels.data(),
             std::numeric_limits<FrameIndex>::max(), 2U, 1U,
             AudioSampleFormat::Float32
         },
