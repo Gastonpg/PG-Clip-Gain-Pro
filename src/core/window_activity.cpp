@@ -24,16 +24,7 @@ ValidationIssue validate(const ActivityDetectionConfig& config) {
                 "Noise-floor quantile must be in the interval (0, 0.5]."};
     }
 
-    if (!std::isfinite(config.minimumDigitalSilenceRatio) ||
-        config.minimumDigitalSilenceRatio <= 0.0 ||
-        config.minimumDigitalSilenceRatio > 1.0) {
-        return {ValidationCode::InvalidWindow,
-                "Digital-silence ratio must be in the interval (0, 1]."};
-    }
-
-    if (!std::isfinite(config.digitalSilenceFloorDb) ||
-        config.digitalSilenceFloorDb >= 0.0 ||
-        !std::isfinite(config.minimumContrastDb) ||
+    if (!std::isfinite(config.minimumContrastDb) ||
         config.minimumContrastDb < 0.0 ||
         config.minimumActiveWindows == 0U) {
         return {ValidationCode::InvalidWindow,
@@ -117,7 +108,7 @@ ActivityDetectionResult detectWindowActivity(
 
         ++result.validWindows;
         if (!hasNonSilentChannel || representativeRms <= 0.0) {
-            destination.levelDb = config.digitalSilenceFloorDb;
+            destination.levelDb = -std::numeric_limits<double>::infinity();
             destination.state = WindowActivityState::DigitalSilence;
             ++result.silentWindows;
             continue;
@@ -133,30 +124,21 @@ ActivityDetectionResult detectWindowActivity(
         return result;
     }
 
-    const double silentRatio = result.validWindows > 0U
-        ? static_cast<double>(result.silentWindows) /
-            static_cast<double>(result.validWindows)
-        : 0.0;
+    std::sort(nonSilentLevels.begin(), nonSilentLevels.end());
+    result.noiseFloorDb =
+        quantileOfSorted(nonSilentLevels, config.lowerQuantile);
 
-    if (silentRatio >= config.minimumDigitalSilenceRatio) {
-        result.noiseFloorDb = config.digitalSilenceFloorDb;
-    } else {
-        std::sort(nonSilentLevels.begin(), nonSilentLevels.end());
-        result.noiseFloorDb =
-            quantileOfSorted(nonSilentLevels, config.lowerQuantile);
-
-        const double contrast =
-            nonSilentLevels.back() - nonSilentLevels.front();
-        if (contrast < config.minimumContrastDb) {
-            result.status = ActivityDetectionStatus::InsufficientContrast;
-            for (auto& window : result.windows) {
-                if (window.state == WindowActivityState::BelowThreshold) {
-                    window.state = WindowActivityState::Uncertain;
-                    window.confidence = 0.2;
-                }
+    const double contrast =
+        nonSilentLevels.back() - nonSilentLevels.front();
+    if (contrast < config.minimumContrastDb) {
+        result.status = ActivityDetectionStatus::InsufficientContrast;
+        for (auto& window : result.windows) {
+            if (window.state == WindowActivityState::BelowThreshold) {
+                window.state = WindowActivityState::Uncertain;
+                window.confidence = 0.2;
             }
-            return result;
         }
+        return result;
     }
 
     result.enterThresholdDb =
