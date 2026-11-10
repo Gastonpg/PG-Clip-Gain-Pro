@@ -1,6 +1,6 @@
 # PG Clip Gain Pro — Base de implementación v0.1
 
-**Estado:** base C++17 compilada localmente con CMake/GCC en Release; 5/5 ejecutables de prueba aprobados.
+**Estado:** base C++17 compilada localmente con CMake/GCC en Release; 6/6 ejecutables de prueba aprobados.
 **Alcance:** contratos de dominio independientes del host VST3. No contiene todavía captura de audio, análisis de dos pasadas, segmentación ni motores Clip Gain/Clip Peak.
 
 ## 1. Decisión de implementación
@@ -25,6 +25,7 @@
 - Acumulador de captura por bloques con memoria preasignada, longitud esperada explícita, verificación de continuidad, detección de huecos/solapamientos, límite de capacidad y estados completo/parcial/cancelado.
 - Primera pasada numérica inicial: descriptores por ventana y por canal (RMS, pico de muestra, validez finita y silencio digital), con cobertura de cola parcial y sin sumar canales.
 - Constructor de snapshot compartido e inmutable: exige captura completa/continua, cobertura total, coincidencia de formato y configuración, y métricas coherentes. Conserva ventanas inválidas marcadas para que los motores puedan abstenerse localmente.
+- Resumen contextual descriptivo de ventanas: cuenta evidencia válida, inválida y silencio por canal; calcula mediana, MAD y rangos de RMS/pico sin imponer objetivos, umbrales de voz ni referencia adaptativa.
 - Constructor de snapshot compartido e inmutable: exige captura completa/continua, cobertura total, coincidencia de formato y configuración, y métricas coherentes. Conserva ventanas inválidas marcadas para que los motores puedan abstenerse localmente.
 - Primera pasada numérica inicial: descriptores por ventana y por canal (RMS, pico de muestra, validez finita y silencio digital), con cobertura de cola parcial y sin sumar canales.
 
@@ -36,7 +37,7 @@ Los validadores son defensas de entrada, no sustituyen las pruebas del algoritmo
 
 ## 4. Pruebas iniciales
 
-tests/core/test_types.cpp contiene comprobaciones deterministas activas también en Release para formatos, rangos temporales, estados de captura, configuración de análisis, integridad de curvas y conversión de ganancia. La ejecución local terminó con 5/5 pruebas aprobadas tanto en Release como en Debug con AddressSanitizer y UndefinedBehaviorSanitizer. La CI queda configurada para Windows y Linux; todavía no hay una ejecución remota confirmada. El snapshot no se construye si la captura es parcial, hay huecos, falta cobertura, cambia la frecuencia de muestreo o no coincide la configuración usada en el análisis. La captura solo se marca completa cuando coincide exactamente con la longitud esperada; una detención temprana nunca habilita conclusiones globales. Los descriptores RMS/pico son mediciones básicas de la primera pasada, no una métrica final de sonoridad percibida ni un detector de voz. Las comprobaciones usan una función de verificación propia, no assert, para seguir activas en Release.
+tests/core/test_types.cpp contiene comprobaciones deterministas activas también en Release para formatos, rangos temporales, estados de captura, configuración de análisis, integridad de curvas y conversión de ganancia. La ejecución local terminó con 6/6 pruebas aprobadas en Release. Las cinco suites anteriores también pasaron con AddressSanitizer y UndefinedBehaviorSanitizer; la suite contextual nueva queda pendiente de repetir bajo sanitizadores. La CI queda configurada para Windows y Linux; todavía no hay una ejecución remota confirmada. El snapshot no se construye si la captura es parcial, hay huecos, falta cobertura, cambia la frecuencia de muestreo o no coincide la configuración usada en el análisis. La captura solo se marca completa cuando coincide exactamente con la longitud esperada; una detención temprana nunca habilita conclusiones globales. Los descriptores RMS/pico son mediciones básicas de la primera pasada, no una métrica final de sonoridad percibida ni un detector de voz. El resumen contextual es estadístico y descriptivo: todavía no detecta frases, intención, respiraciones ni referencia adaptativa. Las comprobaciones usan una función de verificación propia, no assert, para seguir activas en Release.
 
 ## 5. Próximas etapas
 
@@ -44,6 +45,6 @@ tests/core/test_types.cpp contiene comprobaciones deterministas activas también
 2. Ampliar pruebas de límites, overflow y datos inválidos.
 3. Ampliar fixtures PCM deterministas con envolventes, transitorios y señales proxy para segmentación y sonoridad.
 4. Integrar el acumulador con el ciclo de vida real del host, incluidos seek, loop, stop y cambios de región.
-5. Ampliar la primera pasada con descriptores espectrales/transitorios versionados; después definir la segunda pasada contextual sobre el snapshot común.
+5. Ampliar la primera pasada con descriptores espectrales/transitorios versionados; después desarrollar la segunda pasada de actividad, continuidad y límites fonéticos sobre el snapshot común.
 
 Los cinco jueces de PG Audio Intelligence permanecen fuera de este alcance y no se implementarán sin autorización explícita.
