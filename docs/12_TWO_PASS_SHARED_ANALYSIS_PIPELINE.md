@@ -1,6 +1,6 @@
 # PG Clip Gain Pro — Flujo compartido de análisis en dos pasadas
 
-**Estado:** Diseño de flujo v0.1 — parcialmente prototipado. El código actual implementa descriptores por ventana, snapshot compartido validado, estadísticas contextuales y candidatos energéticos de actividad/regiones con histéresis y puente de pausas. No implementa todavía reconocimiento de voz, refinamiento fonético, protección real de consonantes/respiraciones ni la segunda pasada contextual completa.
+**Estado:** Diseño de flujo v0.1 — parcialmente prototipado. El código actual implementa descriptores por ventana, una instantánea inmutable intermedia de la pasada 1, estadísticas contextuales y candidatos energéticos de actividad/regiones con histéresis y puente de pausas. El tipo actual `SharedAnalysisSnapshot` no es todavía el snapshot final que consumirán los motores: falta la segunda pasada contextual completa, reconocimiento/refinamiento fonético y protección validada de consonantes, respiraciones y colas.
 **Objetivo:** definir qué hace cada pasada del análisis común y qué datos entrega a Clip Gain y Clip Peak, sin mezclar sus decisiones.
 
 ## 1. Por qué dos pasadas
