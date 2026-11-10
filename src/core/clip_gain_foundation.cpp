@@ -86,11 +86,29 @@ PhraseProfileResult analyzePhraseProfiles(
         return result;
     }
 
+    if (activity.status == ActivityDetectionStatus::InvalidConfiguration) {
+        result.status = PhraseProfileStatus::InvalidConfiguration;
+        result.issue = activity.issue;
+        return result;
+    }
+
     if (activity.status != ActivityDetectionStatus::Ready ||
         activity.regions.empty() ||
         activity.windows.size() != snapshot.windows().size()) {
         result.status = PhraseProfileStatus::NoCandidateRegions;
         return result;
+    }
+
+    for (std::size_t index = 0U; index < activity.windows.size(); ++index) {
+        const auto& activityRange = activity.windows[index].range;
+        const auto& snapshotRange = snapshot.windows()[index].range;
+        if (activityRange.start != snapshotRange.start ||
+            activityRange.end != snapshotRange.end) {
+            result.status = PhraseProfileStatus::InvalidConfiguration;
+            result.issue = {ValidationCode::RangeOutsideCapture,
+                            "Activity map does not belong to this snapshot window grid."};
+            return result;
+        }
     }
 
     const auto channelCount =
@@ -197,7 +215,9 @@ AdaptiveReferenceResult selectAdaptiveReference(
     eligibleLevels.reserve(profiles.size());
     for (const auto& profile : profiles) {
         if (profile.eligibleForReference &&
-            std::isfinite(profile.rmsLevelDb)) {
+            std::isfinite(profile.rmsLevelDb) &&
+            std::isfinite(profile.confidence) &&
+            profile.confidence >= 0.0 && profile.confidence <= 1.0) {
             eligibleLevels.push_back(profile.rmsLevelDb);
         }
     }
@@ -248,7 +268,10 @@ ClipGainRecommendationResult recommendClipGain(
         recommendation.confidence = profile.confidence;
 
         if (!profile.eligibleForReference ||
+            !std::isfinite(profile.confidence) ||
             profile.confidence < config.minimumConfidence ||
+            profile.confidence > 1.0 ||
+            profile.range.end <= profile.range.start ||
             !std::isfinite(profile.rmsLevelDb)) {
             recommendation.action = GainRecommendationAction::Abstain;
             result.recommendations.push_back(recommendation);
