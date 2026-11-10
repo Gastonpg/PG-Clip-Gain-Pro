@@ -92,6 +92,27 @@ void CaptureAccumulator::finish() noexcept {
     }
 }
 
+void CaptureAccumulator::finishAtCapturedLength() noexcept {
+    if (state_ != CaptureState::Capturing) {
+        return;
+    }
+
+    if (capturedFrames_ == 0U) {
+        state_ = CaptureState::Partial;
+        return;
+    }
+
+    expectedFrameCount_ = capturedFrames_;
+    state_ = CaptureState::Complete;
+}
+
+void CaptureAccumulator::markDiscontinuous() noexcept {
+    if (state_ == CaptureState::Capturing) {
+        hasDiscontinuities_ = true;
+        state_ = CaptureState::Discontinuous;
+    }
+}
+
 void CaptureAccumulator::cancel() noexcept {
     if (state_ == CaptureState::Capturing) {
         state_ = CaptureState::Cancelled;
