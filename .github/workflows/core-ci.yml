@@ -1,16 +1,18 @@
 name: Core and VST3 CI
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - design/pg-audio-intelligence-foundation
 
 jobs:
   build-test-and-plugin:
-    name: Build, test and VST3 (${{ matrix.os }})
+    name: Build, test and VST3 (\${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: \${{ matrix.os }}
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -19,12 +21,12 @@ jobs:
         if: runner.os == 'Windows'
         run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DPGCLIP_BUILD_TESTS=ON -DPGCLIP_BUILD_VST3=ON
 
-      - name: Configure Linux x64
+      - name: Configure Linux core tests
         if: runner.os == 'Linux'
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPGCLIP_BUILD_TESTS=ON -DPGCLIP_BUILD_VST3=ON
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPGCLIP_BUILD_TESTS=ON -DPGCLIP_BUILD_VST3=OFF
 
-      - name: Build core and VST3
-        run: cmake --build build --config Release --target PGClipGainPro pgclip_core_tests pgclip_fixture_tests pgclip_capture_tests pgclip_window_tests pgclip_snapshot_tests pgclip_context_tests pgclip_spsc_queue_tests pgclip_queued_capture_tests pgclip_capture_session_tests pgclip_planar_queue_writer_tests pgclip_transport_continuity_tests pgclip_activity_tests pgclip_clip_gain_tests pgclip_gain_curve_tests pgclip_clip_peak_tests --parallel 2
+      - name: Build all configured targets
+        run: cmake --build build --config Release --parallel 2
 
       - name: Run core tests
         run: ctest --test-dir build -C Release --output-on-failure
@@ -37,7 +39,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: PG-Clip-Gain-Pro-VST3-${{ matrix.os }}
+          name: PG-Clip-Gain-Pro-VST3-Windows
           path: artifact/PGClipGainPro.vst3
           if-no-files-found: error
           retention-days: 14
