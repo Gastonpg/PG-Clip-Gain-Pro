@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure
-        run: cmake -S . -B build -DPGCLIP_BUILD_TESTS=ON -DPGCLIP_BUILD_VST3=ON
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPGCLIP_BUILD_TESTS=ON -DPGCLIP_BUILD_VST3=ON
 
       - name: Build core and VST3
         run: cmake --build build --config Release --target PGClipGainPro pgclip_core_tests pgclip_fixture_tests pgclip_capture_tests pgclip_window_tests pgclip_snapshot_tests pgclip_context_tests pgclip_spsc_queue_tests --parallel 2
