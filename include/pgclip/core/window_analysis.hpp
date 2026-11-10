@@ -34,6 +34,8 @@ struct WindowAnalysisResult {
     WindowAnalysisStatus status{WindowAnalysisStatus::InvalidAudio};
     ValidationIssue issue{};
     std::vector<WindowDescriptor> windows;
+    AudioFormat format{};
+    FrameIndex totalFrames{0};
 };
 
 ValidationIssue validate(const AudioBufferView& audio);
