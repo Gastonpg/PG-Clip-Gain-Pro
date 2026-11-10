@@ -7,6 +7,7 @@ option(PGCLIP_BUILD_TESTS "Build the host-independent test suite" ON)
 add_library(pgclip_core STATIC
     src/core/types.cpp
     src/core/capture_accumulator.cpp
+    src/core/window_analysis.cpp
 )
 target_include_directories(pgclip_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -32,4 +33,8 @@ if(PGCLIP_BUILD_TESTS)
     add_executable(pgclip_capture_tests tests/core/test_capture_accumulator.cpp)
     target_link_libraries(pgclip_capture_tests PRIVATE pgclip_core)
     add_test(NAME pgclip_capture_tests COMMAND pgclip_capture_tests)
+
+    add_executable(pgclip_window_tests tests/core/test_window_analysis.cpp)
+    target_link_libraries(pgclip_window_tests PRIVATE pgclip_core)
+    add_test(NAME pgclip_window_tests COMMAND pgclip_window_tests)
 endif()
