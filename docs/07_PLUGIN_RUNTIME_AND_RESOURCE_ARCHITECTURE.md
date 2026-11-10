@@ -39,6 +39,22 @@ Usar snapshots inmutables, colas acotadas o mecanismos lock-free apropiados. Evi
 
 Definir durante integración el comportamiento frente a cambios de buffer, transporte, render offline, suspensión y restauración VST3.
 
+## 2.1 Adquisición de audio: límite importante de VST3
+
+El diseño no puede asumir que un plugin insertado recibe una ruta de archivo ni acceso aleatorio a todas las muestras del clip. En el flujo VST3 habitual, el host entrega bloques al procesador. Por tanto, la adquisición de señal debe diseñarse explícitamente:
+
+- **Captura durante reproducción:** el usuario inicia el análisis y reproduce la región. El plugin copia o resume los bloques recibidos en un búfer temporal de análisis, conservando continuidad y posición temporal.
+- **Procesamiento offline del host:** si el DAW ejecuta el plugin en un render offline, esos bloques pueden alimentar el mismo analizador, siempre que el host realmente invoque ese recorrido.
+- **Acceso extendido del host:** solo puede utilizarse si un host concreto ofrece una API documentada y compatible; nunca será requisito para el funcionamiento VST3 general.
+
+La interfaz debe explicar cuándo necesita reproducir la región para completar el análisis y mostrar progreso, cancelación y cobertura obtenida. Si el host no entregó toda la región, el análisis se marca parcial y no debe fingir que conoce el clip completo.
+
+### Política de almacenamiento
+
+La captura debe tener presupuesto de memoria. Para clips largos, usar almacenamiento temporal por bloques o análisis incremental con descriptores compactos. Si se necesita conservar audio para una segunda pasada, debe existir una política explícita de caché temporal, límite de tamaño, limpieza y recuperación ante cancelación. No escribir archivos temporales sin control ni guardar audio fuente dentro del estado persistente del plugin.
+
+La primera versión debe priorizar un flujo fiable y claro: iniciar captura, reproducir desde el inicio de la región, completar la pasada, y luego generar las curvas. La posibilidad de analizar sin reproducir dependerá de capacidades reales del host y no se prometerá de forma universal.
+
 ## 3. Presupuesto para hardware modesto
 
 Diseñar para CPU de pocos núcleos y memoria limitada:
