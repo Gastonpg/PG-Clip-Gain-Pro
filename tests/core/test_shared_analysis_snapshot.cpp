@@ -75,6 +75,13 @@ int main() {
         check(wrongConfig.status == SnapshotBuildStatus::InvalidAnalysis,
               "reject snapshot config that differs from analysis config");
 
+        auto shiftedWindow = analysis;
+        shiftedWindow.windows[1U].range.start += 1U;
+        const auto rejectedAlignment = buildSharedAnalysisSnapshot(
+            complete, config, std::move(shiftedWindow));
+        check(rejectedAlignment.status == SnapshotBuildStatus::CoverageMismatch,
+              "reject windows shifted off the configured analysis grid");
+
         auto incompleteAnalysis = analysis;
         incompleteAnalysis.windows.pop_back();
         incompleteAnalysis.windows.pop_back();
