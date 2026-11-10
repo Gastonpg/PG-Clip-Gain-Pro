@@ -56,10 +56,11 @@ bool CaptureSessionControl::acknowledgeProducerQuiesced() noexcept {
     auto current = state_.load(std::memory_order_acquire);
     for (;;) {
         CaptureSessionState next{};
-        if (current == CaptureSessionState::StopRequested) {
+        if (current == CaptureSessionState::StopRequested ||
+            current == CaptureSessionState::RejectRequested) {
             next = CaptureSessionState::Draining;
         } else if (current == CaptureSessionState::CancelRequested) {
-            next = CaptureSessionState::Cancelled;
+            next = CaptureSessionState::CancelDraining;
         } else {
             return false;
         }
@@ -73,13 +74,24 @@ bool CaptureSessionControl::acknowledgeProducerQuiesced() noexcept {
 
 bool CaptureSessionControl::completeDrain(
     bool captureIsCompleteAndValid) noexcept {
-    auto expected = CaptureSessionState::Draining;
-    return state_.compare_exchange_strong(
-        expected,
-        captureIsCompleteAndValid ? CaptureSessionState::Captured
-                                  : CaptureSessionState::Rejected,
-        std::memory_order_acq_rel,
-        std::memory_order_acquire);
+    auto current = state_.load(std::memory_order_acquire);
+    for (;;) {
+        CaptureSessionState next{};
+        if (current == CaptureSessionState::Draining) {
+            next = captureIsCompleteAndValid
+                ? CaptureSessionState::Captured
+                : CaptureSessionState::Rejected;
+        } else if (current == CaptureSessionState::CancelDraining) {
+            next = CaptureSessionState::Cancelled;
+        } else {
+            return false;
+        }
+        if (state_.compare_exchange_weak(
+                current, next,
+                std::memory_order_acq_rel, std::memory_order_acquire)) {
+            return true;
+        }
+    }
 }
 
 void CaptureSessionControl::reject() noexcept {
@@ -88,11 +100,14 @@ void CaptureSessionControl::reject() noexcept {
         if (current == CaptureSessionState::Disarmed ||
             current == CaptureSessionState::Captured ||
             current == CaptureSessionState::Rejected ||
-            current == CaptureSessionState::Cancelled) {
+            current == CaptureSessionState::Cancelled ||
+            current == CaptureSessionState::RejectRequested ||
+            current == CaptureSessionState::Draining ||
+            current == CaptureSessionState::CancelDraining) {
             return;
         }
         if (state_.compare_exchange_weak(
-                current, CaptureSessionState::Rejected,
+                current, CaptureSessionState::RejectRequested,
                 std::memory_order_acq_rel, std::memory_order_acquire)) {
             return;
         }
