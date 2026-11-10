@@ -15,6 +15,8 @@ enum class SnapshotBuildStatus {
     InvalidDescriptor
 };
 
+struct SnapshotBuildResult;
+
 class SharedAnalysisSnapshot {
 public:
     std::uint32_t version() const noexcept;
