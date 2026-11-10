@@ -2,13 +2,6 @@ name: Core and VST3 CI
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - design/pg-audio-intelligence-foundation
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build-test-and-plugin:
