@@ -16,6 +16,7 @@ target_include_directories(pgclip_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 target_compile_features(pgclip_core PUBLIC cxx_std_17)
+set_target_properties(pgclip_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if(MSVC)
     target_compile_options(pgclip_core PRIVATE /W4 /permissive-)
