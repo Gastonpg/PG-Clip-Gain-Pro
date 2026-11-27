@@ -64,10 +64,10 @@ LRESULT CALLBACK editorWindowProc(HWND window, UINT message,
         if (controller != nullptr) {
             const auto id = Steinberg::Vst::kCaptureEnableParameterId;
             const double next = controller->getParamNormalized(id) >= 0.5 ? 0.0 : 1.0;
-            controller->beginEdit(id);
+            // The controller interface exposes parameter state changes, while
+            // edit gestures belong to IComponentHandler (the host callback).
+            // Keep this native view independent of a host-specific handler.
             controller->setParamNormalized(id, next);
-            controller->performEdit(id, next);
-            controller->endEdit(id);
             SetWindowTextW(GetDlgItem(window, kCaptureButtonId),
                            next >= 0.5 ? L"CAPTURE ARMED" : L"START CAPTURE");
         }
