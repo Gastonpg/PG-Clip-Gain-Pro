@@ -12,7 +12,8 @@ double clampScore(double value) noexcept {
 
 bool validCurve(const GainCurve& curve, FrameIndex totalFrames,
                 double maximumCorrectionDb) {
-    if (totalFrames == 0U || curve.points.empty()) return false;
+    if (totalFrames == 0U) return false;
+    if (curve.points.empty()) return true;
     FrameIndex previous = 0U;
     bool first = true;
     for (const auto& point : curve.points) {
