@@ -69,6 +69,17 @@ int main() {
               "produce independent Clip Peak events");
         check(!result.combinedCurve.points.empty(),
               "publish a combined static curve for downstream review");
+        check(result.judges.evaluated,
+              "run all five specialist judges and final arbiter");
+        check(std::isfinite(result.judges.finalArbiter.score),
+              "publish a finite final arbitration score");
+        if (result.judges.approved) {
+            check(!result.judges.approvedCurve.points.empty(),
+                  "publish only the judge-approved static curve");
+        } else {
+            check(result.judges.approvedCurve.points.empty(),
+                  "withhold the curve when the arbiter rejects it");
+        }
 
         config.combination.maximumCombinedBoostDb = 0.0;
         const auto limited = buildAnalysisPipeline(*built.snapshot, config);
