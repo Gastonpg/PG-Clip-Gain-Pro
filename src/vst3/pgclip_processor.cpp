@@ -219,6 +219,34 @@ tresult PLUGIN_API PGClipGainProcessor::process(ProcessData& data) {
         return kResultFalse;
     }
 
+    // Apply the last completed static correction during playback of the
+    // captured timeline. No curve construction, allocation or locking occurs
+    // in this audio callback.
+    if (data.processContext != nullptr) {
+        const auto* curve = captureRuntime_.activeGainCurve();
+        const auto captureStart = captureRuntime_.captureStartFrame();
+        const auto playbackStart = data.processContext->projectTimeSamples;
+        if (curve != nullptr && playbackStart >= captureStart) {
+            void* outputChannels[2]{};
+            for (int32 channel = 0; channel < output.numChannels; ++channel) {
+                outputChannels[channel] = data.symbolicSampleSize == kSample32
+                    ? static_cast<void*>(output.channelBuffers32[channel])
+                    : static_cast<void*>(output.channelBuffers64[channel]);
+            }
+            const auto format = data.symbolicSampleSize == kSample32
+                ? pgclip::AudioSampleFormat::Float32
+                : pgclip::AudioSampleFormat::Float64;
+            const auto localStart = static_cast<pgclip::FrameIndex>(
+                playbackStart - captureStart);
+            (void)pgclip::applyGainCurveToBlock(
+                pgclip::MutableAudioBlockView{
+                    outputChannels, localStart,
+                    static_cast<std::uint32_t>(data.numSamples),
+                    static_cast<std::uint32_t>(output.numChannels), format},
+                *curve);
+        }
+    }
+
     if (captureRuntime_.state() == pgclip::CaptureSessionState::Armed) {
         if (data.processContext == nullptr) {
             captureRuntime_.requestStop();
