@@ -8,7 +8,7 @@ namespace pgclip {
 
 struct FiveJudgeConfig {
     double minimumApprovalScore{0.55};
-    double maximumCorrectionDb{6.0};
+    double maximumCorrectionDb{12.0};
     double maximumAdjacentChangeDb{6.0};
 };
 
