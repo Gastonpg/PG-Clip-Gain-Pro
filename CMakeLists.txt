@@ -129,6 +129,8 @@ if(PGCLIP_BUILD_VST3)
         src/vst3/vst3_capture_runtime.cpp
         src/vst3/vst3_capture_runtime.h
         src/vst3/pgclip_controller.cpp
+        src/vst3/pgclip_editor_view.cpp
+        src/vst3/pgclip_editor_view.h
         src/vst3/pgclip_entry.cpp
         src/vst3/pgclip_cids.h
         src/vst3/pgclip_processor.h
