@@ -45,6 +45,8 @@ public:
     bool lastCaptureValid() const noexcept;
     std::shared_ptr<const SharedAnalysisSnapshot> latestAnalysisSnapshot() const noexcept;
     std::shared_ptr<const AnalysisPipelineResult> latestAnalysisResult() const noexcept;
+    const GainCurveRuntime* activeGainCurve() const noexcept;
+    std::int64_t captureStartFrame() const noexcept;
 
 private:
     void workerLoop() noexcept;
@@ -57,6 +59,8 @@ private:
     std::unique_ptr<QueuedCaptureAssembler> assembler_;
     std::shared_ptr<const SharedAnalysisSnapshot> analysisSnapshot_;
     std::shared_ptr<const AnalysisPipelineResult> analysisResult_;
+    std::vector<std::unique_ptr<GainCurveRuntime>> appliedCurves_;
+    std::atomic<const GainCurveRuntime*> activeGainCurve_{nullptr};
     std::vector<float> discardScratch_;
 
     std::atomic<bool> shutdownRequested_{false};
