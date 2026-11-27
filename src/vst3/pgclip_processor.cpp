@@ -133,6 +133,13 @@ tresult PLUGIN_API PGClipGainProcessor::setupProcessing(ProcessSetup& setup) {
     return result;
 }
 
+tresult PLUGIN_API PGClipGainProcessor::setProcessing(TBool state) {
+    if (!state) {
+        captureRuntime_.requestStop();
+    }
+    return AudioEffect::setProcessing(state);
+}
+
 tresult PLUGIN_API PGClipGainProcessor::getControllerClassId(TUID classId) {
     PGClipGainControllerUID.toTUID(classId);
     return kResultOk;

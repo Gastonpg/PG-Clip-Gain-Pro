@@ -15,6 +15,7 @@ public:
     tresult PLUGIN_API initialize(FUnknown* context) SMTG_OVERRIDE;
     tresult PLUGIN_API terminate() SMTG_OVERRIDE;
     tresult PLUGIN_API setupProcessing(ProcessSetup& setup) SMTG_OVERRIDE;
+    tresult PLUGIN_API setProcessing(TBool state) SMTG_OVERRIDE;
     tresult PLUGIN_API getControllerClassId(TUID classId) SMTG_OVERRIDE;
     tresult PLUGIN_API setBusArrangements(
         SpeakerArrangement* inputs, int32 numIns,
