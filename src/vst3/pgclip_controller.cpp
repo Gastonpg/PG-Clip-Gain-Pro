@@ -29,6 +29,9 @@ tresult PLUGIN_API PGClipGainController::initialize(FUnknown* context) {
     parameters.addParameter(
         STR16("Capture"), STR16(""), 1, 0.0,
         ParameterInfo::kCanAutomate, kCaptureEnableParameterId);
+    parameters.addParameter(
+        STR16("Input Level"), STR16(""), 0, 0.0,
+        ParameterInfo::kIsReadOnly, kInputLevelParameterId);
     return kResultOk;
 }
 
