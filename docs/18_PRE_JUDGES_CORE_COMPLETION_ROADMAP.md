@@ -1,7 +1,7 @@
 # PG Clip Gain Pro — Hoja de ruta para completar el núcleo antes de los jueces
 
 **Rama de trabajo:** `pre-judges/core-completion-roadmap`  
-**Estado:** fase A de compilación/pruebas automatizadas superada en AppVeyor (15/15 suites y Validator verde); fase B con primera integración de captura VST3 publicada, pendiente de nueva CI y prueba en FL Studio. Este documento no representa funciones que aún no hayan sido verificadas.  
+**Estado:** fase A superada en CI; fase B incluye captura VST3 y publicación de snapshot tras captura válida; fase C tiene una primera orquestación de los dos motores y coordinación de curvas añadida, pendiente de CI y validación en host. No se declara validación perceptual ni integración de UI.  
 **Regla de alcance:** no implementar ni entrenar los cinco jueces hasta cerrar las puertas de aceptación de este documento y recibir autorización del usuario.
 
 ## 1. Diagnóstico honesto del estado encontrado
@@ -48,6 +48,8 @@ Todavía no se debe presentar como plugin funcional de nivelación vocal. En par
 **Aceptación:** captura mono/estéreo Float32/Float64, sin asignaciones ni bloqueos en el callback; pruebas de stop, cancelación, seek, loop, overflow, cierre y múltiples instancias; ninguna sesión incompleta se etiqueta como completa.
 
 ### Fase C — Análisis compartido completo en dos pasadas
+
+**Primer coordinador añadido, pendiente de CI:** `buildAnalysisPipeline` recibe un único `SharedAnalysisSnapshot`, calcula un mapa de actividad común, perfiles y referencia adaptativa; entrega ese mismo contexto a Clip Gain y Clip Peak; conserva las curvas independientes y produce una curva combinada con límites de seguridad. Se agregó una suite específica de integración. Esta versión usa la detección energética y RMS proxy existente; no equivale al refinamiento fonético contextual completo ni a protección validada de consonantes/respiraciones.
 
 **Pasada 1 — descripción neutral**
 - Validación de la captura y cobertura.

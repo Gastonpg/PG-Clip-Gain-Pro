@@ -22,7 +22,6 @@ add_library(pgclip_core STATIC
     src/core/clip_gain_foundation.cpp
     src/core/gain_curve_processor.cpp
     src/core/clip_peak_foundation.cpp
-    src/core/analysis_pipeline.cpp
 )
 target_include_directories(pgclip_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -97,10 +96,6 @@ if(PGCLIP_BUILD_TESTS)
     add_executable(pgclip_clip_peak_tests tests/core/test_clip_peak_foundation.cpp)
     target_link_libraries(pgclip_clip_peak_tests PRIVATE pgclip_core)
     add_test(NAME pgclip_clip_peak_tests COMMAND pgclip_clip_peak_tests)
-
-    add_executable(pgclip_analysis_pipeline_tests tests/core/test_analysis_pipeline.cpp)
-    target_link_libraries(pgclip_analysis_pipeline_tests PRIVATE pgclip_core)
-    add_test(NAME pgclip_analysis_pipeline_tests COMMAND pgclip_analysis_pipeline_tests)
 endif()
 
 if(PGCLIP_BUILD_VST3)

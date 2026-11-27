@@ -71,9 +71,17 @@ int main() {
               "publish a combined static curve for downstream review");
 
         config.combination.maximumCombinedBoostDb = 0.0;
-        const auto unsafe = buildAnalysisPipeline(*built.snapshot, config);
-        check(unsafe.status == AnalysisPipelineStatus::CombinationFailed,
-              "reject combined curve when a safety limit is exceeded");
+        const auto limited = buildAnalysisPipeline(*built.snapshot, config);
+        check(limited.status == AnalysisPipelineStatus::Ready,
+              "complete coordination when the safety ceiling is tightened");
+        bool boostWithinLimit = true;
+        for (const auto& point : limited.combinedCurve.points) {
+            if (point.gainDb > 1.0e-9) {
+                boostWithinLimit = false;
+            }
+        }
+        check(boostWithinLimit,
+              "clamp combined boost to the configured safety ceiling");
     }
 
     if (failures != 0) {
