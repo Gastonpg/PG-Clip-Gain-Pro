@@ -82,6 +82,14 @@ AnalysisPipelineResult buildAnalysisPipeline(
     }
 
     result.combinedCurve = combined.curve;
+    result.judges = runFiveJudges(
+        result.phraseProfiles.profiles,
+        result.reference,
+        result.clipGainRecommendations.recommendations,
+        result.clipPeakEvents,
+        result.combinedCurve,
+        snapshot.totalFrames(),
+        config.judges);
     result.status = AnalysisPipelineStatus::Ready;
     return result;
 }
