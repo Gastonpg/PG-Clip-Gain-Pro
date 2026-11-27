@@ -210,6 +210,51 @@ int main() {
               overflowAssembler.descriptor().state == CaptureState::Discontinuous,
           "never publish capture as complete after a dropped callback block");
 
+    SpscAudioBlockQueue activeProducerQueue(4U, 4U, 2U);
+    QueuedCaptureAssembler activeProducerAssembler(format, 8U, 4U);
+    check(activeProducerQueue.tryPush(AudioBlockView{
+              channelsA.data(), 800U, 2U, 2U,
+              AudioSampleFormat::Float32, 0U
+          }) == AudioQueueResult::Success,
+          "queue the first callback block before the worker begins assembly");
+    check(activeProducerAssembler.beginFromActiveProducer(
+              activeProducerQueue, 800U, 4U,
+              activeProducerQueue.droppedBlocks()),
+          "allow worker assembly to begin while producer has queued audio");
+    check(activeProducerAssembler.drainOne(activeProducerQueue) ==
+              QueueDrainStatus::BlockAccepted,
+          "preserve the first block queued before worker-side begin");
+    check(activeProducerAssembler.finishAtCapturedLength(activeProducerQueue) &&
+              activeProducerAssembler.descriptor().state == CaptureState::Complete &&
+              activeProducerAssembler.descriptor().totalFrames == 2U,
+          "finalize the queued prefix as a valid user-stopped capture");
+
+    SpscAudioBlockQueue overflowBeforeBeginQueue(2U, 4U, 2U);
+    QueuedCaptureAssembler overflowBeforeBeginAssembler(format, 8U, 4U);
+    check(overflowBeforeBeginQueue.tryPush(AudioBlockView{
+              channelsA.data(), 900U, 2U, 2U,
+              AudioSampleFormat::Float32, 0U
+          }) == AudioQueueResult::Success,
+          "queue first block before worker preparation");
+    check(overflowBeforeBeginQueue.tryPush(AudioBlockView{
+              channelsA.data(), 902U, 2U, 2U,
+              AudioSampleFormat::Float32, 0U
+          }) == AudioQueueResult::Success,
+          "fill queue before worker preparation");
+    check(overflowBeforeBeginQueue.tryPush(AudioBlockView{
+              channelsA.data(), 904U, 2U, 2U,
+              AudioSampleFormat::Float32, 0U
+          }) == AudioQueueResult::Full,
+          "record overflow before worker-side begin");
+    check(overflowBeforeBeginAssembler.beginFromActiveProducer(
+              overflowBeforeBeginQueue, 900U, 8U, 0U),
+          "begin with the original arm-time dropped-block baseline");
+    check(overflowBeforeBeginAssembler.drainOne(overflowBeforeBeginQueue) ==
+              QueueDrainStatus::CaptureRejected &&
+              overflowBeforeBeginAssembler.descriptor().state ==
+                  CaptureState::Discontinuous,
+          "reject overflow that occurred before worker assembly began");
+
     if (failures != 0) {
         std::cerr << failures << " queued capture test(s) failed.\n";
         return 1;

@@ -1,6 +1,6 @@
 # PG Clip Gain Pro — Integración VST3 de captura y ciclo de vida
 
-**Estado:** plan de integración con tres módulos host-independientes ya implementados (coordinador de ciclo de vida, adaptador planar y guardián de continuidad). La captura aún no está conectada ni validada dentro del VST3.
+**Estado:** primera integración del runtime de captura conectada al procesador VST3 y pendiente de compilación/validación CI y prueba en host real. El callback usa la cola SPSC y el adaptador planar; un worker separado ensambla la captura. La integración todavía no se considera validada.
 
 ## 1. Objetivo de la primera captura funcional
 
@@ -38,12 +38,12 @@ Si la preparación falla antes de publicar `Armed`, `completeArm(false)` pasa di
 
 ### Adaptador planar de bloques (implementado, aún no integrado al VST3)
 
-El helper host-independiente `pushPlanarAudioInChunks` recibe punteros planares del host y divide bloques mayores que el slot máximo en subbloques contiguos, sin asignaciones ni esperas. Devuelve el número exacto de bloques/frames aceptados y un indicador `complete`; si la cola se llena a mitad de una llamada, informa el prefijo aceptado y el error, y el contador de descartes de la cola invalida esa captura. La suite `pgclip_planar_queue_writer_tests` cubre división de 10 frames en slots 4+4+2, continuidad de posiciones, orden de muestras, desbordamiento parcial, entrada mono Float64 y canales silenciosos. El helper todavía no se llama desde `process()`, y la suite está configurada pero no ejecutada. El adaptador convierte Float64 a Float32 únicamente en la copia de análisis.
+El helper host-independiente `pushPlanarAudioInChunks` recibe punteros planares del host y divide bloques mayores que el slot máximo en subbloques contiguos, sin asignaciones ni esperas. Devuelve el número exacto de bloques/frames aceptados y un indicador `complete`; si la cola se llena a mitad de una llamada, informa el prefijo aceptado y el error, y el contador de descartes de la cola invalida esa captura. La suite `pgclip_planar_queue_writer_tests` cubre división de 10 frames en slots 4+4+2, continuidad de posiciones, orden de muestras, desbordamiento parcial, entrada mono Float64 y canales silenciosos. El helper ya se invoca desde el runtime llamado por `process()`. El worker comienza el ensamblado desde el primer bloque encolado y conserva el contador de descartes tomado al armar para detectar desbordamientos ocurridos antes de que el worker inicie el ensamblador. El adaptador convierte Float64 a Float32 únicamente en la copia de análisis.
 
 
 ### Guardián de continuidad del transporte (implementado, aún no integrado al VST3)
 
-El módulo host-independiente `TransportContinuityTracker` compara la posición de muestra de cada bloque con el final esperado del anterior. Distingue primer bloque, continuidad, transporte detenido, ciclo activo, discontinuidad y bloque inválido; rechaza overflow aritmético y admite posiciones negativas de preroll. Un seek, hueco, solapamiento o retroceso rompe la secuencia y obliga a iniciar una nueva captura. La suite `pgclip_transport_continuity_tests` cubre esos casos, pero todavía no se ejecutó. La integración deberá pasarle `projectTimeSamples`, `numSamples`, `kPlaying` y `kCycleActive` del contexto VST3 en orden de callback. Ante `Discontinuity`, `NotPlaying`, `CycleActive` o `InvalidBlock`, el callback no debe seguir presentando la sesión como captura válida; la transición de rechazo debe respetar primero la quiescencia del productor.
+El runtime VST3 ya alimenta este módulo desde `ProcessContext` en orden de callback. El módulo host-independiente `TransportContinuityTracker` compara la posición de muestra de cada bloque con el final esperado del anterior. Distingue primer bloque, continuidad, transporte detenido, ciclo activo, discontinuidad y bloque inválido; rechaza overflow aritmético y admite posiciones negativas de preroll. Un seek, hueco, solapamiento o retroceso rompe la secuencia y obliga a iniciar una nueva captura. La suite `pgclip_transport_continuity_tests` cubre esos casos, pero todavía no se ejecutó. La integración deberá pasarle `projectTimeSamples`, `numSamples`, `kPlaying` y `kCycleActive` del contexto VST3 en orden de callback. Ante `Discontinuity`, `NotPlaying`, `CycleActive` o `InvalidBlock`, el callback no debe seguir presentando la sesión como captura válida; la transición de rechazo debe respetar primero la quiescencia del productor.
 
 ## 4. Reglas del callback de audio
 
@@ -96,10 +96,10 @@ Clip Gain y Clip Peak conservan curvas separadas. No sumar ni fusionar automáti
 ## 9. Riesgos que bloquean la integración
 
 - El contrato de `projectTimeSamples` ya fue confirmado en el SDK fijado.
-- No existe aún interfaz propia para armar/desarmar; el controlador actual solo serializa estado.
-- El coordinador atómico existe, pero no está conectado al callback ni a un worker real.
-- El rechazo de una sesión no equivale a que el callback haya quedado quiescente: la integración debe esperar la garantía del host antes de drenar o liberar buffers. Los estados `RejectRequested` y `CancelDraining` impiden rearmar mientras esa limpieza siga pendiente; un fallo durante la preparación pasa también por `Draining`.
-- El adaptador planar de división en subbloques está implementado y tiene una suite configurada, pero todavía no fue compilado ni ejecutado. No hay límite de memoria de captura elegido y probado con duraciones reales.
+- El controlador expone un parámetro automatizable `Capture` (armar/reproducir/desarmar). Todavía no hay indicador visual de progreso/resultado ni interfaz de edición.
+- El coordinador atómico está conectado al runtime VST3. Un contador atómico de callbacks en vuelo impide que el worker drene o finalice mientras una operación productora sigue activa; después de pasar a Stop/Reject/Cancel, nuevos callbacks no publican bloques.
+- El rechazo de una sesión no equivale por sí solo a quiescencia: el runtime usa un contador lock-free de callbacks activos y solo drena tras observar cero. La seguridad de cierre sigue dependiendo de que el host respete el ciclo de vida VST3 y no invoque `process()` después de `terminate()`.
+- El adaptador planar está conectado. La primera política reserva como máximo 16 MiB para PCM capturado, con tope adicional de 60 segundos; el tamaño real depende de frecuencia y canales. Esta política aún requiere pruebas de duración, múltiples instancias y presión de memoria.
 - No hay política implementada para captura cancelada, stop del host y restauración de sesión.
 
-**Criterio de salida:** ninguna captura se presenta como completa salvo que el productor haya terminado, la cola esté drenada, no haya bloques descartados, la secuencia de posiciones sea contigua y el acumulador confirme cobertura válida.
+**Pendiente de CI:** compilar la integración, ejecutar las 15 suites y Steinberg Validator; agregar pruebas del inicio del ensamblador con bloques ya encolados y de overflow anterior al inicio del worker. Luego validar en FL Studio 2026. La captura no publica todavía un snapshot al analizador ni genera curvas.

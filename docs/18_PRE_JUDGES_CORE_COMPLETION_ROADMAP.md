@@ -1,7 +1,7 @@
 # PG Clip Gain Pro — Hoja de ruta para completar el núcleo antes de los jueces
 
 **Rama de trabajo:** `pre-judges/core-completion-roadmap`  
-**Estado:** auditoría y plan de cierre. No representa funciones implementadas ni pruebas superadas.  
+**Estado:** fase A de compilación/pruebas automatizadas superada en AppVeyor (15/15 suites y Validator verde); fase B con primera integración de captura VST3 publicada, pendiente de nueva CI y prueba en FL Studio. Este documento no representa funciones que aún no hayan sido verificadas.  
 **Regla de alcance:** no implementar ni entrenar los cinco jueces hasta cerrar las puertas de aceptación de este documento y recibir autorización del usuario.
 
 ## 1. Diagnóstico honesto del estado encontrado
@@ -31,18 +31,19 @@ Todavía no se debe presentar como plugin funcional de nivelación vocal. En par
 5. Ejecutar el Validator oficial de Steinberg sobre el bundle VST3.
 6. Guardar logs de compilación, versiones del SDK, configuración y resultados.
 
-**Aceptación:** build Windows x64 verde, 15/15 suites verdes, Validator verde y artefacto instalable identificable. Un build verde no sustituye la prueba en FL Studio.
+**Aceptación alcanzada en el commit `20a4ba7`:** build Windows x64 verde, 15/15 suites verdes, selftest del SDK 51/51, Validator 47/47 y bundle VST3 empaquetado. Un build verde no sustituye la prueba en FL Studio.
 
 ### Fase B — Captura real desde VST3
 
-1. Definir controles de captura: armar, desarmar, cancelar y estado visible.
-2. Resolver el punto de quiescencia real del callback antes de drenar o liberar buffers.
-3. Integrar el callback como productor de la cola preasignada.
-4. Integrar un worker como consumidor y ensamblador.
-5. Conectar el guardián de continuidad a projectTimeSamples, reproducción, stop, seek, loop y preroll.
-6. Rechazar sin recuperación silenciosa las capturas incompletas, con overflow, discontinuidad o cambio incompatible de formato.
-7. Definir un presupuesto máximo de memoria y una política de caché para regiones largas.
-8. Mantener passthrough bit-exacto mientras se captura.
+**Implementación inicial publicada, pendiente de CI/host:** parámetro automatizable `Capture`; callback como productor SPSC; adaptador planar para bloques grandes; worker consumidor/ensamblador; continuidad con `projectTimeSamples`, reproducción y ciclo; contador de callbacks activos para quiescencia; presupuesto de PCM de 16 MiB y tope de 60 segundos; passthrough mientras se captura.
+
+1. Validar en CI compilación, pruebas y Validator de esta integración.
+2. Confirmar pruebas de inicio del ensamblador con bloques ya encolados y detección de overflow anterior al primer drenaje.
+3. Completar pruebas de stop, cancelación, seek, loop, overflow, cambio de formato, cierre y múltiples instancias.
+4. Exponer estado/progreso y resultado de captura sin bloquear el hilo de audio.
+5. Publicar la captura válida como snapshot inmutable para el analizador.
+6. Probar en FL Studio 2026 x64.
+7. Mantener passthrough hasta que una curva haya sido aprobada.
 
 **Aceptación:** captura mono/estéreo Float32/Float64, sin asignaciones ni bloqueos en el callback; pruebas de stop, cancelación, seek, loop, overflow, cierre y múltiples instancias; ninguna sesión incompleta se etiqueta como completa.
 
