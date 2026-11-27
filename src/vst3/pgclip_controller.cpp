@@ -1,8 +1,11 @@
 #include "pgclip_controller.h"
 #include "pgclip_cids.h"
+#include "pgclip_editor_view.h"
 
 #include "base/source/fstreamer.h"
 #include "pluginterfaces/base/fstrdefs.h"
+
+#include <cstring>
 
 namespace Steinberg {
 namespace Vst {
@@ -27,6 +30,13 @@ tresult PLUGIN_API PGClipGainController::initialize(FUnknown* context) {
         STR16("Capture"), STR16(""), 1, 0.0,
         ParameterInfo::kCanAutomate, kCaptureEnableParameterId);
     return kResultOk;
+}
+
+IPlugView* PLUGIN_API PGClipGainController::createView(FIDString name) {
+    if (name == nullptr || std::strcmp(name, ViewType::kEditor) != 0) {
+        return nullptr;
+    }
+    return new PGClipGainEditorView(this);
 }
 
 tresult PLUGIN_API PGClipGainController::setComponentState(IBStream* state) {
