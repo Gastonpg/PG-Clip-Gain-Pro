@@ -170,6 +170,11 @@ int main() {
     check(userDefinedAssembler.drainOne(userDefinedQueue) ==
               QueueDrainStatus::BlockAccepted,
           "drain user-defined region content");
+    check(userDefinedQueue.tryPush(AudioBlockView{
+              channelsA.data(), 602U, 2U, 2U,
+              AudioSampleFormat::Float32, 0U
+          }) == AudioQueueResult::Success,
+          "enqueue final audio block before user-stop finalization");
     check(!userDefinedAssembler.finishAtCapturedLength(userDefinedQueue),
           "refuse to finalize while queued audio remains");
     check(userDefinedAssembler.drainOne(userDefinedQueue) ==
@@ -178,8 +183,8 @@ int main() {
     check(userDefinedAssembler.finishAtCapturedLength(userDefinedQueue),
           "finalize user-defined region after queue drains");
     check(userDefinedAssembler.descriptor().state == CaptureState::Complete &&
-              userDefinedAssembler.descriptor().totalFrames == 2U,
-          "accept explicit user stop as the exact captured region boundary");
+              userDefinedAssembler.descriptor().totalFrames == 4U,
+          "accept explicit user stop after including all queued audio");
 
     SpscAudioBlockQueue overflowQueue(2U, 4U, 2U);
     QueuedCaptureAssembler overflowAssembler(format, 8U, 4U);
