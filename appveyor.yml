@@ -1,0 +1,25 @@
+version: 0.1.{build}
+
+image: Visual Studio 2022
+platform: x64
+configuration: Release
+
+branches:
+  only:
+    - pre-judges/core-completion-roadmap
+
+skip_tags: true
+clone_depth: 1
+
+build_script:
+  - cmd: cmake --version
+  - cmd: cmake -S . -B build -A x64 -DPGCLIP_BUILD_TESTS=ON -DPGCLIP_BUILD_VST3=ON
+  - cmd: cmake --build build --config Release --parallel 2
+
+test_script:
+  - cmd: ctest --test-dir build -C Release --output-on-failure
+
+artifacts:
+  - path: build\VST3\Release\PGClipGainPro.vst3
+    name: PG-Clip-Gain-Pro-VST3-Windows
+    type: zip
