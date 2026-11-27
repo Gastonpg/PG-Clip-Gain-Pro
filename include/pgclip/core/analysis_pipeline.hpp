@@ -3,6 +3,7 @@
 #include "pgclip/core/clip_gain_foundation.hpp"
 #include "pgclip/core/clip_peak_foundation.hpp"
 #include "pgclip/core/gain_curve_processor.hpp"
+#include "pgclip/core/five_judges.hpp"
 
 namespace pgclip {
 
@@ -15,6 +16,7 @@ struct AnalysisPipelineConfig {
     ClipPeakConfig clipPeak{};
     ClipPeakCurveConfig clipPeakCurve{};
     CurveCombinationConfig combination{};
+    FiveJudgeConfig judges{};
 };
 
 enum class AnalysisPipelineStatus {
@@ -43,6 +45,7 @@ struct AnalysisPipelineResult {
     GainCurve clipGainCurve{};
     GainCurve clipPeakCurve{};
     GainCurve combinedCurve{};
+    FiveJudgeResult judges{};
 };
 
 AnalysisPipelineResult buildAnalysisPipeline(
