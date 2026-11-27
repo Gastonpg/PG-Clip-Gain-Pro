@@ -3,6 +3,7 @@
 
 #if defined(_WIN32)
 #include <windows.h>
+#include "pluginterfaces/vst/ivsteditcontroller.h"
 
 namespace {
 constexpr wchar_t kWindowClass[] = L"PGClipGainProEditorWindow";
@@ -10,12 +11,12 @@ constexpr int kCaptureButtonId = 1001;
 
 LRESULT CALLBACK editorWindowProc(HWND window, UINT message,
                                   WPARAM wParam, LPARAM lParam) {
-    if (message == WM_CREATE) {
+    if (message == WM_NCCREATE) {\n        const auto* create = reinterpret_cast<const CREATESTRUCTW*>(lParam);\n        SetWindowLongPtrW(window, GWLP_USERDATA,\n                          reinterpret_cast<LONG_PTR>(create->lpCreateParams));\n        return DefWindowProcW(window, message, wParam, lParam);\n    }\n\n    if (message == WM_CREATE) {
         CreateWindowExW(0, L"BUTTON", L"START CAPTURE",
                         WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
                         28, 150, 190, 42, window,
                         reinterpret_cast<HMENU>(static_cast<INT_PTR>(kCaptureButtonId)),
-                        GetModuleHandleW(nullptr), nullptr);
+                        GetModuleHandleW(nullptr), controller_);
         return 0;
     }
 
