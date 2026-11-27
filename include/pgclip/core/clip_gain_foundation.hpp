@@ -22,6 +22,8 @@ struct PhraseProfile {
     std::uint32_t activeWindowCount{0};
     double confidence{0.0};
     bool eligibleForReference{false};
+    // Bridged low-level windows remain untouched by phrase-wide gain.
+    std::vector<FrameRange> protectedRanges;
 };
 
 enum class PhraseProfileStatus {
@@ -88,6 +90,7 @@ struct PhraseGainRecommendation {
     double correctionDb{0.0};
     double confidence{0.0};
     GainRecommendationAction action{GainRecommendationAction::Abstain};
+    std::vector<FrameRange> protectedRanges;
 };
 
 struct ClipGainRecommendationResult {
