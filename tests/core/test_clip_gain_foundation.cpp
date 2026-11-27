@@ -154,6 +154,48 @@ int main() {
                           "validate ordered curve points and relative phrase gains");
                 }
 
+                PhraseGainRecommendation pauseProtected;
+                pauseProtected.range = FrameRange{0U, 1000U};
+                pauseProtected.correctionDb = 3.0;
+                pauseProtected.confidence = 1.0;
+                pauseProtected.action = GainRecommendationAction::Adjust;
+                pauseProtected.protectedRanges.push_back(FrameRange{400U, 600U});
+                const auto pauseProtectedCurve = buildClipGainCurve(
+                    std::vector<PhraseGainRecommendation>{pauseProtected},
+                    1000U, ClipGainCurveConfig{100U, 100U});
+                check(pauseProtectedCurve.status == ClipGainCurveStatus::Ready,
+                      "build phrase gain curve around a protected low-level pause");
+                if (pauseProtectedCurve.status == ClipGainCurveStatus::Ready) {
+                    const auto& points = pauseProtectedCurve.curve.points;
+                    bool hasZeroPauseBoundaries = false;
+                    bool hasGainBeforePause = false;
+                    bool hasGainAfterPause = false;
+                    for (const auto& point : points) {
+                        if ((point.frame == 400U || point.frame == 600U) &&
+                            std::abs(point.gainDb) < 1.0e-9) {
+                            hasZeroPauseBoundaries = true;
+                        }
+                        if (point.frame == 100U && point.gainDb > 2.9) {
+                            hasGainBeforePause = true;
+                        }
+                        if (point.frame == 700U && point.gainDb > 2.9) {
+                            hasGainAfterPause = true;
+                        }
+                    }
+                    check(hasZeroPauseBoundaries && hasGainBeforePause &&
+                              hasGainAfterPause,
+                          "return to unity across the protected pause and resume smoothly");
+                }
+
+                auto invalidProtected = pauseProtected;
+                invalidProtected.protectedRanges = {FrameRange{900U, 1100U}};
+                const auto invalidProtectedCurve = buildClipGainCurve(
+                    std::vector<PhraseGainRecommendation>{invalidProtected},
+                    1000U, ClipGainCurveConfig{100U, 100U});
+                check(invalidProtectedCurve.status ==
+                          ClipGainCurveStatus::InvalidRecommendations,
+                      "reject protected ranges extending beyond their phrase");
+
                 const std::vector<PhraseGainRecommendation> shortAdjacent{
                     PhraseGainRecommendation{
                         FrameRange{0U, 2U}, 2.0, 1.0,
