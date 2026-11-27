@@ -2,6 +2,7 @@
 
 #include "pgclip/core/capture_session_control.hpp"
 #include "pgclip/core/queued_capture_assembler.hpp"
+#include "pgclip/core/shared_analysis_snapshot.hpp"
 #include "pgclip/core/transport_continuity_tracker.hpp"
 
 #include <atomic>
@@ -41,6 +42,7 @@ public:
     CaptureSessionState state() const noexcept;
     std::uint64_t lastCapturedFrames() const noexcept;
     bool lastCaptureValid() const noexcept;
+    std::shared_ptr<const SharedAnalysisSnapshot> latestAnalysisSnapshot() const noexcept;
 
 private:
     void workerLoop() noexcept;
@@ -51,6 +53,7 @@ private:
     CaptureSessionControl session_;
     TransportContinuityTracker continuity_;
     std::unique_ptr<QueuedCaptureAssembler> assembler_;
+    std::shared_ptr<const SharedAnalysisSnapshot> analysisSnapshot_;
     std::vector<float> discardScratch_;
 
     std::atomic<bool> shutdownRequested_{false};

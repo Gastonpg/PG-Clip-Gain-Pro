@@ -1,6 +1,7 @@
 #include "vst3_capture_runtime.h"
 
 #include "pgclip/core/planar_audio_queue_writer.hpp"
+#include "pgclip/core/window_analysis.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -101,6 +102,8 @@ bool Vst3CaptureRuntime::requestArm(
     continuity_.reset();
     lastCapturedFrames_.store(0U, std::memory_order_relaxed);
     lastCaptureValid_.store(false, std::memory_order_relaxed);
+    std::atomic_store_explicit(&analysisSnapshot_,
+        std::shared_ptr<const SharedAnalysisSnapshot>{}, std::memory_order_release);
     return session_.requestArm();
 }
 
@@ -281,6 +284,38 @@ void Vst3CaptureRuntime::workerLoop() noexcept {
                                 descriptor.totalFrames > 0U;
                         lastCapturedFrames_.store(
                             descriptor.totalFrames, std::memory_order_release);
+
+                        if (valid) {
+                            const auto sampleCount = assembler_->sampleCount();
+                            const auto expectedSamples =
+                                descriptor.totalFrames *
+                                static_cast<FrameIndex>(descriptor.format.channelCount);
+                            if (sampleCount == expectedSamples &&
+                                assembler_->data() != nullptr) {
+                                const AnalysisConfig config{
+                                    2048U, 512U, 1U
+                                };
+                                const AudioBufferView audio{
+                                    descriptor.format,
+                                    descriptor.totalFrames,
+                                    assembler_->data()
+                                };
+                                auto analysis =
+                                    analyzeWindowDescriptors(audio, config);
+                                auto built = buildSharedAnalysisSnapshot(
+                                    descriptor, config, std::move(analysis));
+                                valid = built.status == SnapshotBuildStatus::Ready &&
+                                        static_cast<bool>(built.snapshot);
+                                if (valid) {
+                                    std::atomic_store_explicit(
+                                        &analysisSnapshot_,
+                                        std::move(built.snapshot),
+                                        std::memory_order_release);
+                                }
+                            } else {
+                                valid = false;
+                            }
+                        }
                     }
                     lastCaptureValid_.store(valid, std::memory_order_release);
                     session_.completeDrain(valid);
@@ -332,6 +367,8 @@ void Vst3CaptureRuntime::finishRejectedSession() noexcept {
     }
     lastCaptureValid_.store(false, std::memory_order_release);
     lastCapturedFrames_.store(0U, std::memory_order_release);
+    std::atomic_store_explicit(&analysisSnapshot_,
+        std::shared_ptr<const SharedAnalysisSnapshot>{}, std::memory_order_release);
     session_.completeDrain(false);
     assembler_.reset();
     assemblerStarted_ = false;
@@ -347,6 +384,11 @@ std::uint64_t Vst3CaptureRuntime::lastCapturedFrames() const noexcept {
 
 bool Vst3CaptureRuntime::lastCaptureValid() const noexcept {
     return lastCaptureValid_.load(std::memory_order_acquire);
+}
+
+std::shared_ptr<const SharedAnalysisSnapshot>
+Vst3CaptureRuntime::latestAnalysisSnapshot() const noexcept {
+    return std::atomic_load_explicit(&analysisSnapshot_, std::memory_order_acquire);
 }
 
 } // namespace pgclip
