@@ -1,3 +1,4 @@
+#include "pgclip/core/clip_gain_foundation.hpp"
 #include "pgclip/core/window_activity.hpp"
 #include "pgclip/core/window_analysis.hpp"
 
@@ -116,6 +117,18 @@ int main() {
                   result.regions[0U].range.start == 480U &&
                   result.regions[0U].range.end == 2880U,
               "preserve the bridged pause inside a candidate region");
+
+        const auto profiles = analyzePhraseProfiles(
+            *bridgedSnapshot.snapshot, result, PhraseProfileConfig{2U, 0.5});
+        check(profiles.status == PhraseProfileStatus::Ready &&
+                  profiles.profiles.size() == 1U,
+              "build a phrase profile from the bridged activity region");
+        if (profiles.profiles.size() == 1U) {
+            check(profiles.profiles[0U].protectedRanges.size() == 1U &&
+                      profiles.profiles[0U].protectedRanges[0U].start == 1440U &&
+                      profiles.profiles[0U].protectedRanges[0U].end == 1920U,
+                  "automatically carry the detected pause into Clip Gain protection");
+        }
     } else {
         check(false, "build short-pause fixture snapshot");
     }
