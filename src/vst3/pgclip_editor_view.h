@@ -11,6 +11,10 @@ public:
     explicit PGClipGainEditorView(IEditController* controller);
     ~PGClipGainEditorView() SMTG_OVERRIDE;
 
+    tresult PLUGIN_API isPlatformTypeSupported(FIDString type) SMTG_OVERRIDE;
+    tresult PLUGIN_API attached(void* parent, FIDString type) SMTG_OVERRIDE;
+    tresult PLUGIN_API removed() SMTG_OVERRIDE;
+
     void attachedToParent() SMTG_OVERRIDE;
     void removedFromParent() SMTG_OVERRIDE;
 
