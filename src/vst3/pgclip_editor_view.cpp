@@ -11,12 +11,19 @@ constexpr int kCaptureButtonId = 1001;
 
 LRESULT CALLBACK editorWindowProc(HWND window, UINT message,
                                   WPARAM wParam, LPARAM lParam) {
-    if (message == WM_NCCREATE) {\n        const auto* create = reinterpret_cast<const CREATESTRUCTW*>(lParam);\n        SetWindowLongPtrW(window, GWLP_USERDATA,\n                          reinterpret_cast<LONG_PTR>(create->lpCreateParams));\n        return DefWindowProcW(window, message, wParam, lParam);\n    }\n\n    if (message == WM_CREATE) {
+    if (message == WM_NCCREATE) {
+        const auto* create = reinterpret_cast<const CREATESTRUCTW*>(lParam);
+        SetWindowLongPtrW(window, GWLP_USERDATA,
+                          reinterpret_cast<LONG_PTR>(create->lpCreateParams));
+        return DefWindowProcW(window, message, wParam, lParam);
+    }
+
+    if (message == WM_CREATE) {
         CreateWindowExW(0, L"BUTTON", L"START CAPTURE",
                         WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
                         28, 150, 190, 42, window,
                         reinterpret_cast<HMENU>(static_cast<INT_PTR>(kCaptureButtonId)),
-                        GetModuleHandleW(nullptr), controller_);
+                        GetModuleHandleW(nullptr), nullptr);
         return 0;
     }
 
@@ -50,8 +57,20 @@ LRESULT CALLBACK editorWindowProc(HWND window, UINT message,
         return 0;
     }
 
-    if (message == WM_COMMAND && LOWORD(wParam) == kCaptureButtonId) {
-        SetWindowTextW(GetDlgItem(window, kCaptureButtonId), L"CAPTURE REQUESTED");
+    if (message == WM_COMMAND && LOWORD(wParam) == kCaptureButtonId &&
+        HIWORD(wParam) == BN_CLICKED) {
+        auto* controller = reinterpret_cast<Steinberg::Vst::IEditController*>(
+            GetWindowLongPtrW(window, GWLP_USERDATA));
+        if (controller != nullptr) {
+            const auto id = Steinberg::Vst::kCaptureEnableParameterId;
+            const double next = controller->getParamNormalized(id) >= 0.5 ? 0.0 : 1.0;
+            controller->beginEdit(id);
+            controller->setParamNormalized(id, next);
+            controller->performEdit(id, next);
+            controller->endEdit(id);
+            SetWindowTextW(GetDlgItem(window, kCaptureButtonId),
+                           next >= 0.5 ? L"CAPTURE ARMED" : L"START CAPTURE");
+        }
         return 0;
     }
 
@@ -86,7 +105,7 @@ void PGClipGainEditorView::attachedToParent() {
             0, kWindowClass, L"PG Clip Gain Pro",
             WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
             0, 0, 720, 360, parent, nullptr,
-            GetModuleHandleW(nullptr), nullptr);
+            GetModuleHandleW(nullptr), controller_);
         editorWindow_ = child;
     }
 #endif
