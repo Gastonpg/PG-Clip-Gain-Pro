@@ -84,6 +84,90 @@ int main() {
               "clamp combined boost to the configured safety ceiling");
     }
 
+
+    // End-to-end regression: a short pause bridged into one phrase must
+    // remain at unity gain in the final coordinated curve.
+    std::vector<float> pauseAudio(12U * 480U, 0.0F);
+    addSine(pauseAudio, 0U, pauseAudio.size(), 0.001);
+    addSine(pauseAudio, 1U * 480U, 2U * 480U, 0.1);
+    addSine(pauseAudio, 4U * 480U, 2U * 480U, 0.1);
+    addSine(pauseAudio, 8U * 480U, 2U * 480U, 0.08);
+    const auto pauseAnalysis = analyzeWindowDescriptors(
+        AudioBufferView{
+            format, static_cast<FrameIndex>(pauseAudio.size()),
+            pauseAudio.data()
+        },
+        analysisConfig);
+    const auto pauseSnapshot = buildSharedAnalysisSnapshot(
+        CaptureDescriptor{
+            format, static_cast<FrameIndex>(pauseAudio.size()),
+            CaptureState::Complete, false
+        },
+        analysisConfig, pauseAnalysis);
+    check(pauseSnapshot.status == SnapshotBuildStatus::Ready &&
+              static_cast<bool>(pauseSnapshot.snapshot),
+          "build end-to-end bridged-pause fixture");
+
+    if (pauseSnapshot.snapshot) {
+        AnalysisPipelineConfig pauseConfig;
+        pauseConfig.activity = ActivityDetectionConfig{
+            12.0, 6.0, 0.2, 3.0, 1U, 2U
+        };
+        pauseConfig.phraseProfiles = PhraseProfileConfig{2U, 0.5};
+        pauseConfig.adaptiveReference = AdaptiveReferenceConfig{2U, 0.5};
+        pauseConfig.clipGain = ClipGainRecommendationConfig{
+            0.5, 6.0, 6.0, 0.5
+        };
+        pauseConfig.clipGainCurve = ClipGainCurveConfig{120U, 120U};
+        pauseConfig.clipPeak = ClipPeakConfig{
+            2U, 6.0, 2.0, 6.0, 0.3, 1U
+        };
+        pauseConfig.clipPeakCurve = ClipPeakCurveConfig{120U, 120U};
+        pauseConfig.combination = CurveCombinationConfig{6.0, 12.0};
+
+        const auto pauseResult = buildAnalysisPipeline(
+            *pauseSnapshot.snapshot, pauseConfig);
+        check(pauseResult.status == AnalysisPipelineStatus::Ready,
+              "complete full analysis pipeline with a bridged internal pause");
+
+        bool pauseWasProtected = false;
+        if (pauseResult.status == AnalysisPipelineStatus::Ready) {
+            for (const auto& recommendation :
+                 pauseResult.clipGainRecommendations.recommendations) {
+                for (const auto& protectedRange :
+                     recommendation.protectedRanges) {
+                    if (protectedRange.start == 1440U &&
+                        protectedRange.end == 1920U) {
+                        pauseWasProtected = true;
+                    }
+                }
+            }
+        }
+        check(pauseWasProtected,
+              "carry the detected pause through Clip Gain recommendations");
+
+        bool finalCurveKeepsPauseAtUnity = false;
+        if (pauseResult.status == AnalysisPipelineStatus::Ready) {
+            const auto& points = pauseResult.combinedCurve.points;
+            bool zeroAtPauseStart = false;
+            bool zeroAtPauseEnd = false;
+            for (const auto& point : points) {
+                if (point.frame == 1440U &&
+                    std::abs(point.gainDb) < 1.0e-9) {
+                    zeroAtPauseStart = true;
+                }
+                if (point.frame == 1920U &&
+                    std::abs(point.gainDb) < 1.0e-9) {
+                    zeroAtPauseEnd = true;
+                }
+            }
+            finalCurveKeepsPauseAtUnity =
+                zeroAtPauseStart && zeroAtPauseEnd;
+        }
+        check(finalCurveKeepsPauseAtUnity,
+              "preserve unity gain at both boundaries in the final combined curve");
+    }
+
     if (failures != 0) {
         std::cerr << failures << " analysis pipeline test(s) failed.\n";
         return 1;
