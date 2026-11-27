@@ -1,6 +1,8 @@
 #include "pgclip_editor_view.h"
 #include "pgclip_cids.h"
 
+#include <cstring>
+
 #if defined(_WIN32)
 #include <windows.h>
 #include "pluginterfaces/vst/ivsteditcontroller.h"
@@ -64,9 +66,6 @@ LRESULT CALLBACK editorWindowProc(HWND window, UINT message,
         if (controller != nullptr) {
             const auto id = Steinberg::Vst::kCaptureEnableParameterId;
             const double next = controller->getParamNormalized(id) >= 0.5 ? 0.0 : 1.0;
-            // The controller interface exposes parameter state changes, while
-            // edit gestures belong to IComponentHandler (the host callback).
-            // Keep this native view independent of a host-specific handler.
             controller->setParamNormalized(id, next);
             SetWindowTextW(GetDlgItem(window, kCaptureButtonId),
                            next >= 0.5 ? L"CAPTURE ARMED" : L"START CAPTURE");
@@ -89,6 +88,37 @@ PGClipGainEditorView::~PGClipGainEditorView() {
     removed();
 }
 
+tresult PLUGIN_API PGClipGainEditorView::isPlatformTypeSupported(FIDString type) {
+#if defined(_WIN32)
+    return type != nullptr && std::strcmp(type, kPlatformTypeHWND) == 0
+        ? kResultTrue : kResultFalse;
+#else
+    (void)type;
+    return kResultFalse;
+#endif
+}
+
+tresult PLUGIN_API PGClipGainEditorView::attached(void* parent, FIDString type) {
+#if defined(_WIN32)
+    if (parent == nullptr || isPlatformTypeSupported(type) != kResultTrue) {
+        return kResultFalse;
+    }
+    systemWindow = parent;
+    attachedToParent();
+    return editorWindow_ != nullptr ? kResultOk : kResultFalse;
+#else
+    (void)parent;
+    (void)type;
+    return kResultFalse;
+#endif
+}
+
+tresult PLUGIN_API PGClipGainEditorView::removed() {
+    removedFromParent();
+    systemWindow = nullptr;
+    return kResultOk;
+}
+
 void PGClipGainEditorView::attachedToParent() {
 #if defined(_WIN32)
     WNDCLASSEXW windowClass{};
@@ -97,16 +127,19 @@ void PGClipGainEditorView::attachedToParent() {
     windowClass.hInstance = GetModuleHandleW(nullptr);
     windowClass.hCursor = LoadCursorW(nullptr, IDC_ARROW);
     windowClass.lpszClassName = kWindowClass;
-    RegisterClassExW(&windowClass);
+    if (RegisterClassExW(&windowClass) == 0 &&
+        GetLastError() != ERROR_CLASS_ALREADY_EXISTS) {
+        editorWindow_ = nullptr;
+        return;
+    }
 
     HWND parent = static_cast<HWND>(systemWindow);
     if (parent != nullptr) {
-        HWND child = CreateWindowExW(
+        editorWindow_ = CreateWindowExW(
             0, kWindowClass, L"PG Clip Gain Pro",
             WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
             0, 0, 720, 360, parent, nullptr,
             GetModuleHandleW(nullptr), controller_);
-        editorWindow_ = child;
     }
 #endif
 }
