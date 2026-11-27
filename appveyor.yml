@@ -17,7 +17,13 @@ build_script:
   - cmd: cmake --build build --config Release --parallel 2
 
 test_script:
-  - cmd: ctest --test-dir build -C Release --output-on-failure
+  - ps: |
+      ctest --test-dir build -C Release --output-on-failure --output-junit build\ctest-results.xml
+      $testExitCode = $LASTEXITCODE
+      (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\build\ctest-results.xml))
+      if ($testExitCode -ne 0) {
+          throw "CTest failed with exit code $testExitCode"
+      }
 
 artifacts:
   - path: build\VST3\Release\PGClipGainPro.vst3
