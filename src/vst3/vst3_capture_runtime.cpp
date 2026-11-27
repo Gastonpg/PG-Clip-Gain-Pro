@@ -337,9 +337,10 @@ void Vst3CaptureRuntime::workerLoop() noexcept {
                                     // playback. The audio callback only reads a lock-free
                                     // pointer and applies the curve; ownership stays on
                                     // the worker until shutdown so the pointer cannot dangle.
-                                    if (pipeline.status == AnalysisPipelineStatus::Ready) {
+                                    if (pipeline.status == AnalysisPipelineStatus::Ready &&
+                                        pipeline.judges.approved) {
                                         auto prepared = prepareGainCurveRuntime(
-                                            pipeline.combinedCurve,
+                                            pipeline.judges.approvedCurve,
                                             GainCurveRuntimeConfig{6.0, 12.0});
                                         if (prepared.status == GainCurveRuntimeStatus::Ready) {
                                             try {
