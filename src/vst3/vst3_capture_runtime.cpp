@@ -17,6 +17,21 @@ constexpr std::uint32_t kMaxChannels = 2U;
 constexpr std::uint64_t kCaptureMemoryBudgetBytes = 16U * 1024U * 1024U;
 constexpr std::uint64_t kMaximumCaptureSeconds = 60U;
 
+// Conservative first-pass settings. The current analyzer is an RMS/energy
+// proxy; phonetic protection and perceptual calibration remain later stages.
+AnalysisPipelineConfig makeInitialPipelineConfig() {
+    AnalysisPipelineConfig config;
+    config.activity = ActivityDetectionConfig{12.0, 6.0, 0.2, 3.0, 1U, 2U};
+    config.phraseProfiles = PhraseProfileConfig{2U, 0.5};
+    config.adaptiveReference = AdaptiveReferenceConfig{2U, 0.5};
+    config.clipGain = ClipGainRecommendationConfig{0.5, 6.0, 6.0, 0.5};
+    config.clipGainCurve = ClipGainCurveConfig{120U, 120U};
+    config.clipPeak = ClipPeakConfig{2U, 6.0, 2.0, 6.0, 0.3, 1U};
+    config.clipPeakCurve = ClipPeakCurveConfig{120U, 120U};
+    config.combination = CurveCombinationConfig{6.0, 12.0};
+    return config;
+}
+
 class CallbackGuard {
 public:
     explicit CallbackGuard(std::atomic<std::uint32_t>& count) noexcept
@@ -104,6 +119,8 @@ bool Vst3CaptureRuntime::requestArm(
     lastCaptureValid_.store(false, std::memory_order_relaxed);
     std::atomic_store_explicit(&analysisSnapshot_,
         std::shared_ptr<const SharedAnalysisSnapshot>{}, std::memory_order_release);
+    std::atomic_store_explicit(&analysisResult_,
+        std::shared_ptr<const AnalysisPipelineResult>{}, std::memory_order_release);
     return session_.requestArm();
 }
 
@@ -307,9 +324,24 @@ void Vst3CaptureRuntime::workerLoop() noexcept {
                                 valid = built.status == SnapshotBuildStatus::Ready &&
                                         static_cast<bool>(built.snapshot);
                                 if (valid) {
+                                    auto snapshot = std::move(built.snapshot);
+                                    // The complete coordinator runs only on this worker,
+                                    // never in the VST3 audio callback.
+                                    auto pipeline = buildAnalysisPipeline(
+                                        *snapshot, makeInitialPipelineConfig());
+                                    try {
+                                        auto published =
+                                            std::make_shared<const AnalysisPipelineResult>(
+                                                std::move(pipeline));
+                                        std::atomic_store_explicit(
+                                            &analysisResult_, std::move(published),
+                                            std::memory_order_release);
+                                    } catch (...) {
+                                        // Preserve the valid capture/snapshot even if
+                                        // publishing the optional result runs out of memory.
+                                    }
                                     std::atomic_store_explicit(
-                                        &analysisSnapshot_,
-                                        std::move(built.snapshot),
+                                        &analysisSnapshot_, std::move(snapshot),
                                         std::memory_order_release);
                                 }
                             } else {
@@ -327,7 +359,6 @@ void Vst3CaptureRuntime::workerLoop() noexcept {
                 finishRejectedSession();
             }
         } else if (current == CaptureSessionState::Draining) {
-            // A failed worker preparation has no active producer.
             session_.completeDrain(false);
         }
 
@@ -369,6 +400,8 @@ void Vst3CaptureRuntime::finishRejectedSession() noexcept {
     lastCapturedFrames_.store(0U, std::memory_order_release);
     std::atomic_store_explicit(&analysisSnapshot_,
         std::shared_ptr<const SharedAnalysisSnapshot>{}, std::memory_order_release);
+    std::atomic_store_explicit(&analysisResult_,
+        std::shared_ptr<const AnalysisPipelineResult>{}, std::memory_order_release);
     session_.completeDrain(false);
     assembler_.reset();
     assemblerStarted_ = false;
@@ -389,6 +422,11 @@ bool Vst3CaptureRuntime::lastCaptureValid() const noexcept {
 std::shared_ptr<const SharedAnalysisSnapshot>
 Vst3CaptureRuntime::latestAnalysisSnapshot() const noexcept {
     return std::atomic_load_explicit(&analysisSnapshot_, std::memory_order_acquire);
+}
+
+std::shared_ptr<const AnalysisPipelineResult>
+Vst3CaptureRuntime::latestAnalysisResult() const noexcept {
+    return std::atomic_load_explicit(&analysisResult_, std::memory_order_acquire);
 }
 
 } // namespace pgclip
