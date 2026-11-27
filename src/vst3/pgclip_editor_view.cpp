@@ -66,7 +66,8 @@ LRESULT CALLBACK editorWindowProc(HWND window, UINT message,
         state->history[state->writeIndex] =
             static_cast<float>(std::clamp(level, 0.0, 1.0));
         state->writeIndex = (state->writeIndex + 1) % state->history.size();
-        InvalidateRect(window, nullptr, FALSE);
+        const RECT graphDirty{30, 210, 690, 300};
+        InvalidateRect(window, &graphDirty, FALSE);
         return 0;
     }
 
@@ -100,43 +101,56 @@ LRESULT CALLBACK editorWindowProc(HWND window, UINT message,
                  50, RGB(180, 187, 198));
 
         RECT graph{30, 210, bounds.right - 30, 300};
+        const int graphWidth = graph.right - graph.left;
+        const int graphHeight = graph.bottom - graph.top;
+        HDC graphDc = CreateCompatibleDC(dc);
+        HBITMAP graphBitmap = CreateCompatibleBitmap(dc, graphWidth, graphHeight);
+        HGDIOBJ oldBitmap = SelectObject(graphDc, graphBitmap);
+
+        RECT localGraph{0, 0, graphWidth, graphHeight};
         HBRUSH graphBg = CreateSolidBrush(RGB(10, 12, 16));
-        FillRect(dc, &graph, graphBg);
+        FillRect(graphDc, &localGraph, graphBg);
         DeleteObject(graphBg);
+
         HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(39, 45, 55));
-        HGDIOBJ oldPen = SelectObject(dc, gridPen);
+        HGDIOBJ oldPen = SelectObject(graphDc, gridPen);
         for (int i = 1; i < 4; ++i) {
-            const int y = graph.top + (graph.bottom - graph.top) * i / 4;
-            MoveToEx(dc, graph.left, y, nullptr);
-            LineTo(dc, graph.right, y);
+            const int y = graphHeight * i / 4;
+            MoveToEx(graphDc, 0, y, nullptr);
+            LineTo(graphDc, graphWidth, y);
         }
         for (int i = 1; i < 12; ++i) {
-            const int x = graph.left + (graph.right - graph.left) * i / 12;
-            MoveToEx(dc, x, graph.top, nullptr);
-            LineTo(dc, x, graph.bottom);
+            const int x = graphWidth * i / 12;
+            MoveToEx(graphDc, x, 0, nullptr);
+            LineTo(graphDc, x, graphHeight);
         }
-        SelectObject(dc, oldPen);
+        SelectObject(graphDc, oldPen);
         DeleteObject(gridPen);
 
         if (state != nullptr) {
             HPEN wavePen = CreatePen(PS_SOLID, 2, RGB(73, 170, 255));
-            oldPen = SelectObject(dc, wavePen);
+            oldPen = SelectObject(graphDc, wavePen);
             const int count = static_cast<int>(state->history.size());
             for (int i = 0; i < count; ++i) {
                 const int index = static_cast<int>(
                     (state->writeIndex + static_cast<std::size_t>(i)) %
                     state->history.size());
                 const float sample = state->history[static_cast<std::size_t>(index)];
-                const int x = graph.left + i * (graph.right - graph.left - 1) /
-                    (count - 1);
-                const int y = graph.bottom - 4 - static_cast<int>(
-                    sample * (graph.bottom - graph.top - 8));
-                if (i == 0) MoveToEx(dc, x, y, nullptr);
-                else LineTo(dc, x, y);
+                const int x = i * (graphWidth - 1) / (count - 1);
+                const int y = graphHeight - 4 - static_cast<int>(
+                    sample * (graphHeight - 8));
+                if (i == 0) MoveToEx(graphDc, x, y, nullptr);
+                else LineTo(graphDc, x, y);
             }
-            SelectObject(dc, oldPen);
+            SelectObject(graphDc, oldPen);
             DeleteObject(wavePen);
         }
+
+        BitBlt(dc, graph.left, graph.top, graphWidth, graphHeight,
+               graphDc, 0, 0, SRCCOPY);
+        SelectObject(graphDc, oldBitmap);
+        DeleteObject(graphBitmap);
+        DeleteDC(graphDc);
 
         drawText(dc, 32, 188, L"INPUT MONITOR", 13, RGB(180, 187, 198), 14,
                  FW_SEMIBOLD);
