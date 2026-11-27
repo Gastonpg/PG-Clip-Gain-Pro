@@ -91,6 +91,8 @@ void Vst3CaptureRuntime::shutdown() noexcept {
     worker_.join();
     assembler_.reset();
     queue_.reset();
+    activeGainCurve_.store(nullptr, std::memory_order_release);
+    appliedCurves_.clear();
 }
 
 bool Vst3CaptureRuntime::requestArm(
@@ -114,6 +116,7 @@ bool Vst3CaptureRuntime::requestArm(
     requestedChannels_.store(channelCount, std::memory_order_relaxed);
     droppedBlocksAtArm_.store(queue_->droppedBlocks(), std::memory_order_relaxed);
     firstBlockReady_.store(false, std::memory_order_relaxed);
+    activeGainCurve_.store(nullptr, std::memory_order_release);
     continuity_.reset();
     lastCapturedFrames_.store(0U, std::memory_order_relaxed);
     lastCaptureValid_.store(false, std::memory_order_relaxed);
@@ -329,6 +332,30 @@ void Vst3CaptureRuntime::workerLoop() noexcept {
                                     // never in the VST3 audio callback.
                                     auto pipeline = buildAnalysisPipeline(
                                         *snapshot, makeInitialPipelineConfig());
+
+                                    // Publish an immutable, precomputed curve for later
+                                    // playback. The audio callback only reads a lock-free
+                                    // pointer and applies the curve; ownership stays on
+                                    // the worker until shutdown so the pointer cannot dangle.
+                                    if (pipeline.status == AnalysisPipelineStatus::Ready) {
+                                        auto prepared = prepareGainCurveRuntime(
+                                            pipeline.combinedCurve,
+                                            GainCurveRuntimeConfig{6.0, 12.0});
+                                        if (prepared.status == GainCurveRuntimeStatus::Ready) {
+                                            try {
+                                                auto owned = std::make_unique<GainCurveRuntime>(
+                                                    std::move(prepared.runtime));
+                                                const auto* publishedCurve = owned.get();
+                                                appliedCurves_.push_back(std::move(owned));
+                                                activeGainCurve_.store(
+                                                    publishedCurve, std::memory_order_release);
+                                            } catch (...) {
+                                                activeGainCurve_.store(
+                                                    nullptr, std::memory_order_release);
+                                            }
+                                        }
+                                    }
+
                                     try {
                                         auto published =
                                             std::make_shared<const AnalysisPipelineResult>(
@@ -427,6 +454,14 @@ Vst3CaptureRuntime::latestAnalysisSnapshot() const noexcept {
 std::shared_ptr<const AnalysisPipelineResult>
 Vst3CaptureRuntime::latestAnalysisResult() const noexcept {
     return std::atomic_load_explicit(&analysisResult_, std::memory_order_acquire);
+}
+
+const GainCurveRuntime* Vst3CaptureRuntime::activeGainCurve() const noexcept {
+    return activeGainCurve_.load(std::memory_order_acquire);
+}
+
+std::int64_t Vst3CaptureRuntime::captureStartFrame() const noexcept {
+    return firstProjectSample_.load(std::memory_order_acquire);
 }
 
 } // namespace pgclip
