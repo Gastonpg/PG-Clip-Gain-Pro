@@ -3,6 +3,8 @@
 
 #include "base/source/fstreamer.h"
 #include "pluginterfaces/base/fstrdefs.h"
+#include "pluginterfaces/vst/ivstparameterchanges.h"
+#include "pluginterfaces/vst/ivstprocesscontext.h"
 
 #include <cstddef>
 #include <cstdint>
