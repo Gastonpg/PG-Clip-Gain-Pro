@@ -23,6 +23,7 @@ add_library(pgclip_core STATIC
     src/core/gain_curve_processor.cpp
     src/core/clip_peak_foundation.cpp
     src/core/analysis_pipeline.cpp
+    src/core/five_judges.cpp
 )
 target_include_directories(pgclip_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
