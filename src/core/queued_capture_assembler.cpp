@@ -34,9 +34,21 @@ bool QueuedCaptureAssembler::begin(
     if (!queue.isInitialized() || queue.queuedBlocks() != 0U) {
         return false;
     }
+    return beginFromActiveProducer(queue, sourceStartFrame, expectedFrameCount,
+                                   queue.droppedBlocks());
+}
+
+bool QueuedCaptureAssembler::beginFromActiveProducer(
+    SpscAudioBlockQueue& queue,
+    FrameIndex sourceStartFrame,
+    FrameIndex expectedFrameCount,
+    std::uint64_t droppedBlocksBaseline) noexcept {
+    if (!queue.isInitialized()) {
+        return false;
+    }
 
     expectedFrameCount_ = expectedFrameCount;
-    droppedBlocksAtBegin_ = queue.droppedBlocks();
+    droppedBlocksAtBegin_ = droppedBlocksBaseline;
     return accumulator_.begin(sourceStartFrame, expectedFrameCount);
 }
 

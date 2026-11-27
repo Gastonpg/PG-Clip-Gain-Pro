@@ -4,6 +4,7 @@
 #include "pgclip/core/spsc_audio_block_queue.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <vector>
 
 namespace pgclip {
@@ -16,8 +17,6 @@ enum class QueueDrainStatus {
     QueueError
 };
 
-// Worker-side bridge from the realtime SPSC queue into the bounded capture.
-// Construct and call this only from the worker/control side, never the callback.
 class QueuedCaptureAssembler {
 public:
     QueuedCaptureAssembler(AudioFormat format,
@@ -30,8 +29,15 @@ public:
     bool begin(SpscAudioBlockQueue& queue,
                FrameIndex sourceStartFrame,
                FrameIndex expectedFrameCount) noexcept;
+
+    // Worker-side begin after the callback has started producing. The baseline
+    // preserves overflow detection even if blocks were queued before begin.
+    bool beginFromActiveProducer(SpscAudioBlockQueue& queue,
+                                 FrameIndex sourceStartFrame,
+                                 FrameIndex expectedFrameCount,
+                                 std::uint64_t droppedBlocksBaseline) noexcept;
+
     QueueDrainStatus drainOne(SpscAudioBlockQueue& queue) noexcept;
-    // Stop the producer first; finalization succeeds only after the queue drains.
     bool finish(SpscAudioBlockQueue& queue) noexcept;
     bool finishAtCapturedLength(SpscAudioBlockQueue& queue) noexcept;
     void cancel() noexcept;

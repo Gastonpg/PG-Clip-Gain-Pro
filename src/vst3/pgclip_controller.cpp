@@ -1,6 +1,8 @@
 #include "pgclip_controller.h"
+#include "pgclip_cids.h"
 
 #include "base/source/fstreamer.h"
+#include "pluginterfaces/base/fstrdefs.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -16,7 +18,15 @@ FUnknown* PGClipGainController::createInstance(void*) {
 }
 
 tresult PLUGIN_API PGClipGainController::initialize(FUnknown* context) {
-    return EditControllerEx1::initialize(context);
+    const tresult result = EditControllerEx1::initialize(context);
+    if (result != kResultOk) {
+        return result;
+    }
+
+    parameters.addParameter(
+        STR16("Capture"), STR16(""), 1, 0.0,
+        ParameterInfo::kCanAutomate, kCaptureEnableParameterId);
+    return kResultOk;
 }
 
 tresult PLUGIN_API PGClipGainController::setComponentState(IBStream* state) {

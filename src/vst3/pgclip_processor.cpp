@@ -66,6 +66,39 @@ bool copyAudioBus(const AudioBusBuffers& input,
     return true;
 }
 
+void handleCaptureParameter(ProcessData& data,
+                            pgclip::Vst3CaptureRuntime& runtime,
+                            std::uint32_t sampleRate,
+                            std::uint32_t channels) noexcept {
+    if (data.inputParameterChanges == nullptr) {
+        return;
+    }
+
+    const int32 queueCount = data.inputParameterChanges->getParameterCount();
+    for (int32 queueIndex = 0; queueIndex < queueCount; ++queueIndex) {
+        auto* queue = data.inputParameterChanges->getParameterData(queueIndex);
+        if (queue == nullptr ||
+            queue->getParameterId() != kCaptureEnableParameterId) {
+            continue;
+        }
+
+        const int32 pointCount = queue->getPointCount();
+        for (int32 pointIndex = 0; pointIndex < pointCount; ++pointIndex) {
+            int32 sampleOffset = 0;
+            ParamValue value = 0.0;
+            if (queue->getPoint(pointIndex, sampleOffset, value) != kResultOk) {
+                continue;
+            }
+            (void)sampleOffset;
+            if (value >= 0.5) {
+                runtime.requestArm(sampleRate, channels);
+            } else {
+                runtime.requestStop();
+            }
+        }
+    }
+}
+
 } // namespace
 
 FUnknown* PGClipGainProcessor::createInstance(void*) {
@@ -83,7 +116,21 @@ tresult PLUGIN_API PGClipGainProcessor::initialize(FUnknown* context) {
         addAudioOutput(STR16("Audio Out"), SpeakerArr::kStereo) == nullptr) {
         return kResultFalse;
     }
-    return kResultOk;
+
+    return captureRuntime_.start() ? kResultOk : kResultFalse;
+}
+
+tresult PLUGIN_API PGClipGainProcessor::terminate() {
+    captureRuntime_.shutdown();
+    return AudioEffect::terminate();
+}
+
+tresult PLUGIN_API PGClipGainProcessor::setupProcessing(ProcessSetup& setup) {
+    const tresult result = AudioEffect::setupProcessing(setup);
+    if (result == kResultOk && setup.sampleRate > 0.0) {
+        sampleRate_ = static_cast<std::uint32_t>(setup.sampleRate);
+    }
+    return result;
 }
 
 tresult PLUGIN_API PGClipGainProcessor::getControllerClassId(TUID classId) {
@@ -142,18 +189,59 @@ tresult PLUGIN_API PGClipGainProcessor::process(ProcessData& data) {
         return kResultFalse;
     }
 
+    handleCaptureParameter(
+        data, captureRuntime_, sampleRate_,
+        static_cast<std::uint32_t>(input.numChannels));
+
     output.silenceFlags = input.silenceFlags;
 
+    bool copied = false;
     if (data.symbolicSampleSize == kSample32) {
-        if (!copyAudioBus<float>(input, output, input.numChannels, data.numSamples)) {
-            return kResultFalse;
-        }
+        copied = copyAudioBus<float>(
+            input, output, input.numChannels, data.numSamples);
     } else if (data.symbolicSampleSize == kSample64) {
-        if (!copyAudioBus<double>(input, output, input.numChannels, data.numSamples)) {
-            return kResultFalse;
-        }
+        copied = copyAudioBus<double>(
+            input, output, input.numChannels, data.numSamples);
     } else {
         return kResultFalse;
+    }
+
+    if (!copied) {
+        return kResultFalse;
+    }
+
+    if (captureRuntime_.state() == pgclip::CaptureSessionState::Armed) {
+        if (data.processContext == nullptr) {
+            captureRuntime_.requestStop();
+        } else {
+            const auto flags = data.processContext->state;
+            const auto format = data.symbolicSampleSize == kSample32
+                ? pgclip::AudioSampleFormat::Float32
+                : pgclip::AudioSampleFormat::Float64;
+
+            const void* channelPointers[2]{};
+            for (int32 channel = 0; channel < input.numChannels; ++channel) {
+                if (data.symbolicSampleSize == kSample32) {
+                    channelPointers[channel] = input.channelBuffers32
+                        ? static_cast<const void*>(input.channelBuffers32[channel])
+                        : nullptr;
+                } else {
+                    channelPointers[channel] = input.channelBuffers64
+                        ? static_cast<const void*>(input.channelBuffers64[channel])
+                        : nullptr;
+                }
+            }
+
+            captureRuntime_.captureBlock(
+                channelPointers,
+                static_cast<std::uint32_t>(input.numChannels),
+                static_cast<std::uint32_t>(data.numSamples),
+                data.processContext->projectTimeSamples,
+                (flags & ProcessContext::kPlaying) != 0,
+                (flags & ProcessContext::kCycleActive) != 0,
+                format,
+                input.silenceFlags);
+        }
     }
 
     return kResultOk;

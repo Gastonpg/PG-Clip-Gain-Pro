@@ -5,6 +5,8 @@ project(PGClipGainPro VERSION 0.1.0 LANGUAGES CXX)
 option(PGCLIP_BUILD_TESTS "Build the host-independent test suite" ON)
 option(PGCLIP_BUILD_VST3 "Build the VST3 plug-in target" ON)
 
+find_package(Threads REQUIRED)
+
 add_library(pgclip_core STATIC
     src/core/types.cpp
     src/core/capture_accumulator.cpp
@@ -59,7 +61,6 @@ if(PGCLIP_BUILD_TESTS)
     target_link_libraries(pgclip_context_tests PRIVATE pgclip_core)
     add_test(NAME pgclip_context_tests COMMAND pgclip_context_tests)
 
-    find_package(Threads REQUIRED)
     add_executable(pgclip_spsc_queue_tests tests/core/test_spsc_audio_block_queue.cpp)
     target_link_libraries(pgclip_spsc_queue_tests PRIVATE pgclip_core Threads::Threads)
     add_test(NAME pgclip_spsc_queue_tests COMMAND pgclip_spsc_queue_tests)
@@ -120,6 +121,8 @@ if(PGCLIP_BUILD_VST3)
 
     set(PGCLIP_VST3_SOURCES
         src/vst3/pgclip_processor.cpp
+        src/vst3/vst3_capture_runtime.cpp
+        src/vst3/vst3_capture_runtime.h
         src/vst3/pgclip_controller.cpp
         src/vst3/pgclip_entry.cpp
         src/vst3/pgclip_cids.h
@@ -135,7 +138,7 @@ if(PGCLIP_BUILD_VST3)
     target_include_directories(PGClipGainPro PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vst3
     )
-    target_link_libraries(PGClipGainPro PRIVATE sdk pgclip_core)
+    target_link_libraries(PGClipGainPro PRIVATE sdk pgclip_core Threads::Threads)
 
     if(MSVC)
         target_compile_options(PGClipGainPro PRIVATE /W4 /permissive-)
