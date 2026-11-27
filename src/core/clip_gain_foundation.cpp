@@ -180,6 +180,13 @@ PhraseProfileResult analyzePhraseProfiles(
 
         PhraseProfile profile;
         profile.range = region.range;
+        for (const auto& activityWindow : activity.windows) {
+            if (activityWindow.state == WindowActivityState::BridgedPause &&
+                activityWindow.range.start >= region.range.start &&
+                activityWindow.range.end <= region.range.end) {
+                profile.protectedRanges.push_back(activityWindow.range);
+            }
+        }
         profile.rmsLevelDb = median(levelValues);
         profile.peakDb = median(peakValues);
         profile.meanAbsoluteDb = median(meanAbsoluteValues);
@@ -266,6 +273,7 @@ ClipGainRecommendationResult recommendClipGain(
         PhraseGainRecommendation recommendation;
         recommendation.range = profile.range;
         recommendation.confidence = profile.confidence;
+        recommendation.protectedRanges = profile.protectedRanges;
 
         if (!profile.eligibleForReference ||
             !std::isfinite(profile.confidence) ||
@@ -363,31 +371,58 @@ ClipGainCurveResult buildClipGainCurve(
         return true;
     };
 
-    for (const auto* recommendation : adjustments) {
-        const FrameIndex duration =
-            recommendation->range.end - recommendation->range.start;
-        if (duration < 2U) {
-            result.status = ClipGainCurveStatus::InvalidRecommendations;
-            result.issue = {ValidationCode::EmptyRange,
-                            "A phrase needs at least two frames for a non-zero ramp."};
-            result.curve.points.clear();
-            return result;
+    const auto appendSegment = [&](FrameIndex start, FrameIndex end,
+                                   double correctionDb) {
+        if (end <= start) {
+            return true;
         }
-
+        const FrameIndex duration = end - start;
+        if (duration < 2U) {
+            return appendPoint(start, 0.0) && appendPoint(end, 0.0);
+        }
         const FrameIndex halfDuration = duration / 2U;
-        const FrameIndex rampIn =
-            std::min(config.rampInFrames, halfDuration);
+        const FrameIndex rampIn = std::min(config.rampInFrames, halfDuration);
         const FrameIndex rampOut =
             std::min(config.rampOutFrames, duration - rampIn);
+        const FrameIndex peakStart = start + rampIn;
+        const FrameIndex peakEnd = end - rampOut;
+        return appendPoint(start, 0.0) &&
+               appendPoint(peakStart, correctionDb) &&
+               (peakEnd <= peakStart ||
+                appendPoint(peakEnd, correctionDb)) &&
+               appendPoint(end, 0.0);
+    };
 
-        const FrameIndex peakStart = recommendation->range.start + rampIn;
-        const FrameIndex peakEnd = recommendation->range.end - rampOut;
+    for (const auto* recommendation : adjustments) {
+        FrameIndex cursor = recommendation->range.start;
+        FrameIndex previousProtectedEnd = cursor;
+        for (const auto& protectedRange : recommendation->protectedRanges) {
+            if (validate(protectedRange, totalFrames) ||
+                protectedRange.start < recommendation->range.start ||
+                protectedRange.end > recommendation->range.end ||
+                protectedRange.start < previousProtectedEnd) {
+                result.status = ClipGainCurveStatus::InvalidRecommendations;
+                result.issue = {ValidationCode::RangeOutsideCapture,
+                                "Protected Clip Gain ranges must be ordered and contained in their phrase."};
+                result.curve.points.clear();
+                return result;
+            }
+            if (!appendSegment(cursor, protectedRange.start,
+                               recommendation->correctionDb) ||
+                !appendPoint(protectedRange.start, 0.0) ||
+                !appendPoint(protectedRange.end, 0.0)) {
+                result.status = ClipGainCurveStatus::InvalidRecommendations;
+                result.issue = {ValidationCode::DuplicateCurvePoint,
+                                "Protected pause boundaries collide with incompatible gain values."};
+                result.curve.points.clear();
+                return result;
+            }
+            cursor = protectedRange.end;
+            previousProtectedEnd = protectedRange.end;
+        }
 
-        if (!appendPoint(recommendation->range.start, 0.0) ||
-            !appendPoint(peakStart, recommendation->correctionDb) ||
-            (peakEnd > peakStart &&
-             !appendPoint(peakEnd, recommendation->correctionDb)) ||
-            !appendPoint(recommendation->range.end, 0.0)) {
+        if (!appendSegment(cursor, recommendation->range.end,
+                           recommendation->correctionDb)) {
             result.status = ClipGainCurveStatus::InvalidRecommendations;
             result.issue = {ValidationCode::DuplicateCurvePoint,
                             "Curve points collide with incompatible gain values."};
