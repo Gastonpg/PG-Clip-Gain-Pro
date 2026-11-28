@@ -111,9 +111,12 @@ FiveJudgeResult runFiveJudges(
         // A phrase with a plausible crest factor and valid peak/RMS ordering
         // is more trustworthy than one whose descriptors contradict each other.
         const double crestDb = phrase.peakDb - phrase.rmsLevelDb;
-        const double crestConsistency =
-            std::abs(crestDb - phrase.crestFactor) <= 3.0 ? 1.0 :
-            clampScore(1.0 - (std::abs(crestDb - phrase.crestFactor) - 3.0) / 12.0);
+        const double crestRatio = std::pow(10.0, crestDb / 20.0);
+        const double crestErrorDb = crestRatio > 0.0 && phrase.crestFactor > 0.0
+            ? std::abs(20.0 * std::log10(crestRatio / phrase.crestFactor))
+            : 24.0;
+        const double crestConsistency = crestErrorDb <= 1.5 ? 1.0 :
+            clampScore(1.0 - (crestErrorDb - 1.5) / 12.0);
         phraseQuality += clampScore(phrase.confidence) * crestConsistency;
         ++eligibleCount;
     }
