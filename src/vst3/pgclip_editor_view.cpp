@@ -59,6 +59,13 @@ LRESULT CALLBACK editorWindowProc(HWND window, UINT message,
         return 0;
     }
 
+    // The graph is painted from a back buffer. Suppress the default
+    // background erase, which otherwise clears the invalidated graph area
+    // before every timer-driven paint and causes visible flicker.
+    if (message == WM_ERASEBKGND) {
+        return 1;
+    }
+
     if (message == WM_TIMER && wParam == kMeterTimerId && state != nullptr) {
         const double level = state->controller != nullptr
             ? state->controller->getParamNormalized(
