@@ -179,6 +179,63 @@ int main() {
               "preserve unity gain at both boundaries in the final combined curve");
     }
 
+    // Specialist-judge regression fixtures: approve a coherent phrase edit,
+    // reject a correction in the wrong musical direction, and protect the
+    // complete interpolated shape across a bridged pause.
+    {
+        PhraseProfile phrase;
+        phrase.range = {0U, 200U};
+        phrase.rmsLevelDb = -20.0;
+        phrase.peakDb = -13.9794000867;
+        phrase.crestFactor = 2.0;
+        phrase.confidence = 0.95;
+        phrase.eligibleForReference = true;
+
+        AdaptiveReferenceResult reference;
+        reference.status = AdaptiveReferenceStatus::Ready;
+        reference.referenceRmsDb = -18.0;
+        reference.medianAbsoluteDeviationDb = 1.0;
+        reference.eligiblePhraseCount = 3U;
+
+        PhraseGainRecommendation recommendation;
+        recommendation.range = phrase.range;
+        recommendation.correctionDb = 2.0;
+        recommendation.confidence = 0.95;
+        recommendation.action = GainRecommendationAction::Adjust;
+
+        ClipPeakResult noPeaks;
+        noPeaks.status = ClipPeakStatus::Ready;
+
+        GainCurve coherent;
+        coherent.points = {{0U, 0.0}, {100U, 2.0}, {200U, 0.0}};
+        const auto approved = runFiveJudges(
+            {phrase}, reference, {recommendation}, noPeaks,
+            coherent, 200U);
+        check(approved.evaluated && approved.approved,
+              "approve a coherent, correctly directed phrase correction");
+        check(approved.approvedCurve.points.size() == coherent.points.size(),
+              "publish the complete judge-approved static curve");
+
+        recommendation.correctionDb = -2.0;
+        const auto wrongDirection = runFiveJudges(
+            {phrase}, reference, {recommendation}, noPeaks,
+            coherent, 200U);
+        check(wrongDirection.evaluated && !wrongDirection.approved &&
+                  wrongDirection.adaptiveLeveling.veto,
+              "veto a phrase correction that moves away from the adaptive reference");
+
+        phrase.protectedRanges.push_back({80U, 120U});
+        recommendation.correctionDb = 2.0;
+        GainCurve crossingPause;
+        crossingPause.points = {{0U, 2.0}, {200U, 0.0}};
+        const auto protectedPause = runFiveJudges(
+            {phrase}, reference, {recommendation}, noPeaks,
+            crossingPause, 200U);
+        check(protectedPause.evaluated && !protectedPause.approved &&
+                  protectedPause.globalCoherence.veto,
+              "veto interpolated gain that crosses a protected pause");
+    }
+
     if (failures != 0) {
         std::cerr << failures << " analysis pipeline test(s) failed.\n";
         return 1;
